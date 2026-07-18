@@ -14,24 +14,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "MatDiscoverAI - AI-Powered Material Discovery Platform",
+  description: "Advanced NLP/LLM-based material discovery framework for intelligent research, prediction, and knowledge extraction. Discover next-generation materials with AI.",
+  keywords: ["MatDiscoverAI", "Material Discovery", "NLP", "LLM", "AI", "Materials Science", "Research", "Machine Learning", "Knowledge Graph"],
+  authors: [{ name: "MatDiscoverAI Team" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "MatDiscoverAI - AI-Powered Material Discovery Platform",
+    description: "Discover next-generation materials with advanced NLP/LLM intelligence",
+    siteName: "MatDiscoverAI",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "MatDiscoverAI - Material Discovery Platform",
+    description: "AI-powered material discovery and research platform",
   },
 };
 
