@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Material {
+  id          String   @id @default(cuid())
+  name        String
+  formula     String
+  category    String   // battery, semiconductor, alloy, polymer, ceramic, catalyst, solar, biomedical
+  description String
+  source      String   @default("manual")
+  confidence  Float    @default(1.0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  properties  MaterialProperty[]
+  entities    ExtractedEntity[]
+  sourceEdges KnowledgeEdge[] @relation("SourceEntity")
+  targetEdges KnowledgeEdge[] @relation("TargetEntity")
+}
+
+model MaterialProperty {
+  id           String   @id @default(cuid())
+  materialId   String
+  propertyName String   // energy_density, conductivity, melting_point, band_gap, etc.
+  propertyValue String
+  unit         String
+  temperature  String?
+  pressure     String?
+  source       String   @default("literature")
+  confidence   Float    @default(1.0)
+  createdAt    DateTime @default(now())
+  material     Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
+}
+
+model ResearchPaper {
+  id        String   @id @default(cuid())
+  title     String
+  authors   String
+  abstract  String
+  year      Int
+  doi       String?
+  journal   String?
+  filePath  String?
+  keywords  String?
+  status    String   @default("uploaded") // uploaded, processing, extracted, error
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  entities  ExtractedEntity[]
+}
+
+model ExtractedEntity {
+  id         String   @id @default(cuid())
+  paperId    String?
+  materialId String?
+  entityType String   // material, property, method, application, condition
+  entityText String
+  confidence Float
+  context    String?
+  createdAt  DateTime @default(now())
+  paper      ResearchPaper? @relation(fields: [paperId], references: [id], onDelete: SetNull)
+  material   Material?  @relation(fields: [materialId], references: [id], onDelete: SetNull)
+}
+
+model KnowledgeEdge {
+  id             String   @id @default(cuid())
+  sourceEntityId String
+  targetEntityId String
+  relationType   String   // has_property, used_in, synthesized_by, improves, alternative_to, related_to
+  confidence     Float    @default(0.8)
+  paperId        String?
+  createdAt      DateTime @default(now())
+  sourceEntity   Material @relation("SourceEntity", fields: [sourceEntityId], references: [id], onDelete: Cascade)
+  targetEntity   Material @relation("TargetEntity", fields: [targetEntityId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  role      String   // user, assistant, system
+  content   String
+  sources   String?  // JSON string of source materials used
+  createdAt DateTime @default(now())
+}
+
+model ExtractionJob {
+  id         String   @id @default(cuid())
+  paperId    String
+  status     String   @default("pending") // pending, processing, completed, failed
+  result     String?  // JSON string of extraction results
+  error      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
