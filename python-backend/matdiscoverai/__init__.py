@@ -1,0 +1,3 @@
+"""
+MatDiscoverAI Django Backend Package
+"""
