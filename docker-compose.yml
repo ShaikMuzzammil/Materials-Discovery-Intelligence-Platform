@@ -1,0 +1,183 @@
+# MatDiscoverAI - Full Stack Docker Compose
+# Complete deployment with Next.js frontend + Python backend
+
+version: '3.8'
+
+services:
+  # ============================================================
+  # Next.js Frontend
+  # ============================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: matdiscoverai-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NEXT_PUBLIC_ML_URL=http://localhost:8001
+      - NODE_ENV=production
+    depends_on:
+      - backend
+      - ml-service
+    networks:
+      - matdiscoverai-network
+    restart: unless-stopped
+
+  # ============================================================
+  # Django Backend (REST API + Database)
+  # ============================================================
+  backend:
+    build:
+      context: ./python-backend
+      dockerfile: Dockerfile
+    container_name: matdiscoverai-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=False
+      - SECRET_KEY=${DJANGO_SECRET_KEY:-change-me-in-production}
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-matdiscoverai}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,*.vercel.app
+      - CORS_ORIGINS=http://localhost:3000,https://matdiscoverai.vercel.app
+    volumes:
+      - ./python-backend/db:/app/db
+      - ./python-backend/media:/app/media
+      - static-files:/app/staticfiles
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - matdiscoverai-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "health_check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================
+  # FastAPI ML Service
+  # ============================================================
+  ml-service:
+    build:
+      context: ./python-backend
+      dockerfile: Dockerfile
+    container_name: matdiscoverai-ml-service
+    ports:
+      - "8001:8001"
+    environment:
+      - MODEL_DIR=/app/models
+      - CACHE_ENABLED=true
+      - LOG_LEVEL=INFO
+    volumes:
+      - model-weights:/app/models
+    networks:
+      - matdiscoverai-network
+    restart: unless-stopped
+    command: ["fastapi-only"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8001/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ============================================================
+  # PostgreSQL Database
+  # ============================================================
+  db:
+    image: postgres:15-alpine
+    container_name: matdiscoverai-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-password}
+      - POSTGRES_DB=${DB_NAME:-matdiscoverai}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - matdiscoverai-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================================
+  # Redis (for Celery task queue & caching)
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: matdiscoverai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - matdiscoverai-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # ============================================================
+  # Celery Worker (for async ML tasks)
+  # ============================================================
+  celery-worker:
+    build:
+      context: ./python-backend
+      dockerfile: Dockerfile
+    container_name: matdiscoverai-celery
+    environment:
+      - DATABASE_URL=postgres://${DB_USER:-postgres}:${DB_PASSWORD:-password}@db:5432/${DB_NAME:-matdiscoverai}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/1
+    depends_on:
+      - db
+      - redis
+    networks:
+      - matdiscoverai-network
+    restart: unless-stopped
+    command: celery -A matdiscoverai worker --loglevel=info --concurrency=4
+
+# ============================================================
+# VOLUMES
+# ============================================================
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  model-weights:
+    driver: local
+  static-files:
+    driver: local
+
+# ============================================================
+# NETWORKS
+# ============================================================
+networks:
+  matdiscoverai-network:
+    driver: bridge
+
+# ============================================================
+# USAGE
+# ============================================================
+#
+# Development:
+#   docker-compose up --build
+#
+# Production:
+#   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Individual services:
+#   docker-compose up -d db redis
+#   docker-compose up -d backend ml-service
+#   docker-compose up -d frontend
+#
+# Management:
+#   docker-compose logs -f [service]
+#   docker-compose exec backend python manage.py shell
+#   docker-compose exec db psql -U postgres -d matdiscoverai
+#

@@ -1,459 +1,59 @@
 # MatDiscoverAI - Complete Deployment Guide
 
-## 🚀 Production-Ready AI-Powered Material Discovery Platform
+## 🚀 AI-Powered Material Discovery Platform
 
-**Version:** 2.0.0 Pro  
-**Framework:** Next.js 16 with App Router  
-**Database:** SQLite with Prisma ORM  
-**Styling:** Tailwind CSS 4 + shadcn/ui
+**Version:** 2.0 (with Python/Django Backend Integration)  
+**Stack:** Next.js 16 + React 19 + TypeScript + Django 4.2 + FastAPI + Prisma
 
 ---
 
 ## 📋 Table of Contents
 
-1. [Project Overview](#project-overview)
-2. [Features](#features)
-3. [Prerequisites](#prerequisites)
-4. [Local Development Setup](#local-development-setup)
-5. [Vercel Deployment](#vercel-deployment)
+1. [Quick Start](#quick-start)
+2. [Project Structure](#project-structure)
+3. [Vercel Deployment (Frontend Only)](#vercel-deployment)
+4. [Full Stack Deployment (Docker)](#full-stack-deployment-docker)
+5. [Python Backend Setup](#python-backend-setup)
 6. [Environment Variables](#environment-variables)
-7. [Database Setup](#database-setup)
-8. [API Endpoints](#api-endpoints)
-9. [Troubleshooting](#troubleshooting)
-10. [Support & Contributing](#support--contributing)
+7. [Troubleshooting](#troubleshooting)
 
 ---
 
-## 🎯 Project Overview
+## 🚀 Quick Start
 
-MatDiscoverAI is an **enterprise-grade, capstone-level** material discovery platform powered by advanced NLP/LLM technologies. It provides:
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn
+- Python 3.10+ (for ML backend, optional)
+- Git
 
-- **Intelligent Material Search**: Query 1,247+ materials by properties, formulas, or applications
-- **AI Property Prediction**: ML-powered prediction using Gaussian Processes, Neural Networks, and Transformers
-- **Research Paper Extraction**: Automated NLP extraction from scientific literature (96.2% accuracy)
-- **Knowledge Graph Visualization**: Interactive exploration of material relationships
-- **AI Chat Assistant**: GPT-4 powered materials science companion
-- **Novel Material Discovery**: Generative AI for discovering new material candidates
-
-### Technology Stack
-
-| Component | Technology |
-|-----------|------------|
-| Frontend | React 19, Next.js 16, TypeScript 5 |
-| Styling | Tailwind CSS 4, shadcn/ui, Framer Motion |
-| Database | SQLite via Prisma ORM |
-| Charts | Recharts (Bar, Line, Pie, Radar, Area) |
-| State | Zustand, TanStack Query |
-| Icons | Lucide React |
-
----
-
-## ✨ Features
-
-### 1. 📊 Dashboard (NEW - Fully Functional)
-- **KPI Cards**: Total Materials, Papers, Extraction Accuracy, ML Score
-- **Interactive Charts**: 
-  - Pie chart: Materials distribution by category
-  - Area chart: Publication trends over time
-- **Activity Feed**: Real-time platform updates
-- **Top Materials**: Most cited materials with quick access
-
-### 2. 🔬 Materials Explorer
-- **Advanced Search**: By name, formula, description
-- **Category Filtering**: Battery, Semiconductor, Alloy, Polymer, Ceramic, Catalyst, Solar, Biomedical
-- **Detailed View**: All properties in table format with confidence scores
-- **Linked Papers**: Direct connection to source research papers
-
-### 3. 📚 Research Papers Section (NEW - Integrated)
-- **Paper Management**: Upload, track status, view details
-- **Entity Extraction**: Automatic extraction of materials, properties, methods
-- **Status Tracking**: Uploaded → Processing → Extracted/Error
-- **DOI Integration**: Direct links to original publications
-- **Material Linking**: Connect papers to specific materials
-
-### 4. 🔮 Discovery & Prediction Engine
-- **Property Prediction**: ML models (GPR, Neural Net, Ensemble, Transformer)
-- **Target Applications**: EV batteries, solid electrolytes, thermoelectrics, photocatalysts
-- **Constraint-Based Search**: Custom requirements (cost, elements, etc.)
-- **Discovery Pipeline**: Composition → Screening → Prediction → Validation → Ranking
-- **Candidate Results**: Table with confidence scores and validation status
-
-### 5. 🕸️ Knowledge Graph
-- **Visual Network**: SVG-based interactive graph
-- **Node Types**: Materials, Papers, Properties, Methods
-- **Edge Relations**: used_in, related_to, source_of, has_property
-- **Statistics Panel**: Node counts, edge types, relation distribution
-- **Radar Chart**: Relation type visualization
-
-### 6. 🤖 NLP Extraction Pipeline
-- **File Upload**: PDF, DOCX, TXT support up to 50MB
-- **Progress Tracking**: Real-time upload and extraction progress
-- **Entity Recognition**: Materials, Properties, Methods, Conditions
-- **Processing Queue**: Monitor multiple documents
-- **Results Display**: Recently extracted entities with confidence scores
-
-### 7. 💬 AI Chat Assistant
-- **Contextual Responses**: Intelligent answers about materials science
-- **Quick Questions**: Pre-built common queries
-- **Source Attribution**: Links to relevant materials/papers
-- **Capabilities Display**: Analysis, Experiment Design, Discovery, Literature Review
-
----
-
-## 🛠️ Prerequisites
-
-Before deployment, ensure you have:
+### Frontend-Only Deployment (Fastest)
 
 ```bash
-# Required Versions
-Node.js >= 18.x (recommended: 20.x LTS)
-npm >= 9.x or bun >= 1.x
-Git >= 2.x
-
-# For Vercel Deployment
-- Vercel Account (free tier available)
-- GitHub/GitLab/Bitbucket repository
-```
-
----
-
-## 💻 Local Development Setup
-
-### 1. Clone or Download Project
-
-```bash
-# If from repository
-git clone <your-repo-url>
+# 1. Clone or extract the project
 cd MatDiscoverAI
 
-# If from zip file
-unzip MatDiscoverAI-Complete-Project.zip
-cd MatDiscoverAI
-```
-
-### 2. Install Dependencies
-
-```bash
-# Using npm (recommended)
+# 2. Install dependencies
 npm install
 
-# Or using bun (faster)
-bun install
-```
-
-### 3. Environment Configuration
-
-Create a `.env` file in the root directory:
-
-```env
-# Database
-DATABASE_URL="file:./db/custom.db"
-
-# Optional: API Keys (for production features)
-OPENAI_API_KEY="your-key-here"  # For enhanced AI features
-```
-
-### 4. Initialize Database
-
-```bash
-# Push schema to database
-npm run db:push
-
-# Generate Prisma client
-npm run db:generate
-
-# Seed database with sample data
-npx tsx scripts/seed.ts
-# OR
-bun run scripts/seed.ts
-```
-
-### 5. Start Development Server
-
-```bash
-# Using npm
+# 3. Run development server
 npm run dev
 
-# Using bun
-bun run dev
+# 4. Open http://localhost:3000
 ```
 
-Visit `http://localhost:3000` to see the application.
-
----
-
-## 🌐 Vercel Deployment
-
-### Method 1: Vercel CLI (Recommended)
-
-#### Step 1: Install Vercel CLI
+### Full Stack with Python Backend
 
 ```bash
-npm i -g vercel
-```
-
-#### Step 2: Login to Vercel
-
-```bash
-vercel login
-```
-
-#### Step 3: Deploy
-
-```bash
-# From project root
-cd /path/to/MatDiscoverAI
-vercel
-
-# Follow prompts:
-# - Set project name: MatDiscoverAI
-# - Deploy to: Production (or Preview for testing)
-# - Confirm settings
-```
-
-#### Step 4: Configure Environment Variables
-
-```bash
-# Add environment variables
-vercel env add DATABASE_URL
-# Enter: file:./db/custom.db (or use external DB URL)
-
-# For production, use external database:
-# vercel env add DATABASE_URL
-# Enter: postgresql://user:pass@host:5432/matdiscoverai
-```
-
-#### Step 5: Redeploy with Environment Variables
-
-```bash
-vercel --prod
-```
-
-### Method 2: Vercel Dashboard (GUI)
-
-1. **Go to [vercel.com](https://vercel.com)** and sign in
-2. **Click "Add New" → "Project"**
-3. **Import your Git repository** (GitHub, GitLab, Bitbucket)
-4. **Configure Project Settings:**
-   ```
-   Framework Preset: Next.js
-   Root Directory: ./ (leave empty if root)
-   Build Command: next build
-   Output Directory: .next
-   Install Command: npm install || bun install
-   ```
-5. **Add Environment Variables:**
-   - Go to Settings → Environment Variables
-   - Add `DATABASE_URL` with your database connection string
-6. **Click "Deploy"**
-
-### Method 3: One-Click Deploy Button
-
-Add this to your README.md:
-
-```markdown
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=<your-repo-url>)
-```
-
----
-
-## ⚙️ Environment Variables
-
-| Variable | Description | Required | Default |
-|----------|-------------|----------|---------|
-| `DATABASE_URL` | Database connection string | Yes | `file:./db/custom.db` |
-| `NODE_ENV` | Environment mode | No | `development` |
-| `NEXT_PUBLIC_APP_URL` | Public application URL | No | Auto-detected |
-| `OPENAI_API_KEY` | OpenAI API key for AI features | No | (Uses mock responses) |
-
-### Production Database Recommendation
-
-For production deployment on Vercel:
-
-**Option A: Vercel Postgres (Easiest)**
-```bash
-# Install Vercel Postgres
-npm i @vercel/postgres
-
-# Update .env
-DATABASE_URL="postgres://default:xxx@ep-xxx.us-east-1.aws.neon.tech/verceldb?sslmode=require"
-```
-
-**Option B: External SQLite (Vercel KV)**
-```bash
-# Use Turso (SQLite edge)
-npm i @libsql/client
-
-DATABASE_URL="libsql://matdiscoverai-xxx.turso.io"
-```
-
-**Option C: PlanetScale (MySQL)**
-```bash
-# Update prisma/schema.prisma
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
-
-DATABASE_URL="mysql://user:pass@host:3306/matdiscoverai"
-```
-
----
-
-## 🗄️ Database Setup
-
-### Schema Overview
-
-The platform uses these main entities:
-
-```
-├── Material (Materials database)
-│   ├── MaterialProperty (Physical/chemical properties)
-│   ├── ExtractedEntity (NLP-extracted entities)
-│   └── KnowledgeEdge (Relationships to other materials)
-│
-├── ResearchPaper (Scientific literature)
-│   └── ExtractedEntity (Extracted materials/properties/methods)
-│
-├── KnowledgeEdge (Material relationships)
-├── ChatMessage (AI conversation history)
-└── ExtractionJob (Background processing jobs)
-```
-
-### Seeding Data
-
-The seed script creates:
-- **10 diverse materials** across all categories
-- **6 research papers** with full metadata
-- **Knowledge edges** linking materials
-- **Sample chat messages**
-
-Run seed anytime:
-```bash
-npx tsx scripts/seed.ts
-```
-
----
-
-## 🔌 API Endpoints
-
-All endpoints return JSON. Base URL: `/api`
-
-### Materials
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/materials` | List materials (search, filter, paginate) |
-| POST | `/api/materials` | Create new material with properties |
-
-**Query Parameters:**
-- `search`: Search name/formula/description
-- `category`: Filter by category
-- `page`, `limit`: Pagination
-- `sortBy`, `sortOrder`: Sorting options
-
-### Research Papers
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/papers` | List papers (search, filter) |
-| POST | `/api/papers` | Register new paper |
-
-### Statistics
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/stats` | Dashboard statistics |
-
-### Other Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/chat` | Send message to AI assistant |
-| POST | `/api/predict` | Run property prediction |
-| POST | `/api/upload` | Upload document for extraction |
-| GET | `/api/knowledge-graph` | Get graph data |
-
----
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-#### 1. "Database not found" Error
-```bash
-# Ensure db directory exists
-mkdir -p db
-
-# Re-push schema
-npm run db:push
-```
-
-#### 2. Prisma Client Errors
-```bash
-# Regenerate client
-npm run db:generate
-
-# Clear cache
-rm -rf node_modules/.cache
+# Terminal 1: Start Next.js Frontend
 npm run dev
+
+# Terminal 2: Start Python Backend
+cd python-backend
+pip install -r requirements.txt
+python manage.py runserver 0.0.0.0:8000      # Django REST API
+uvicorn fastapi_app:app --host 0.0.0.0 --port 8001 --reload  # FastAPI ML Service
 ```
-
-#### 3. Build Fails on Vercel
-```json
-// vercel.json (create if needed)
-{
-  "buildCommand": "next build",
-  "installCommand": "npm install",
-  "framework": "nextjs"
-}
-```
-
-#### 4. Environment Variables Not Loading
-```bash
-# Verify .env is in root (not src/)
-ls -la .env
-
-# Restart dev server after changes
-Ctrl+C
-npm run dev
-```
-
-#### 5. Port Already in Use
-```bash
-# Kill process on port 3000
-lsof -ti:3000 | xargs kill -9
-
-# Or use different port
-npm run dev -- -p 3001
-```
-
-### Performance Optimization
-
-For production:
-
-1. **Enable ISR (Incremental Static Regeneration)**
-   ```typescript
-   // In page components
-   export const revalidate = 3600 // 1 hour
-   ```
-
-2. **Use CDN for static assets**
-   ```javascript
-   // next.config.ts
-   module.exports = {
-     images: { domains: ['cdn.example.com'] }
-   }
-   ```
-
-3. **Database Connection Pooling**
-   ```prisma
-   // prisma.schema.prisma
-   datasource db {
-     url = env("DATABASE_URL")
-     // Add connection_limit for production
-   }
-   ```
 
 ---
 
@@ -461,111 +61,366 @@ For production:
 
 ```
 MatDiscoverAI/
-├── db/                    # SQLite database files
-│   └── custom.db         # Main database
-├── prisma/
-│   └── schema.prisma    # Database schema
-├── public/
-│   └── logo.svg         # Application logo
-├── scripts/
-│   └── seed.ts          # Database seeder
 ├── src/
 │   ├── app/
-│   │   ├── api/         # API routes
-│   │   │   ├── chat/
-│   │   │   ├── extract/
-│   │   │   ├── knowledge-graph/
-│   │   │   ├── materials/
-│   │   │   ├── papers/
-│   │   │   ├── predict/
-│   │   │   ├── stats/
-│   │   │   └── upload/
-│   │   ├── globals.css  # Global styles
-│   │   ├── layout.tsx   # Root layout
-│   │   └── page.tsx     # Main page (ALL features)
-│   ├── components/
-│   │   └── ui/          # shadcn/ui components
-│   ├── hooks/           # React hooks
-│   └── lib/
-│       ├── db.ts        # Prisma client
-│       └── utils.ts     # Utilities
-├── .env                 # Environment variables
-├── package.json         # Dependencies
-├── tailwind.config.ts   # Tailwind config
-├── tsconfig.json        # TypeScript config
-└── next.config.ts       # Next.js config
+│   │   ├── page.tsx              # Main application (2200+ lines)
+│   │   ├── layout.tsx            # Root layout with metadata
+│   │   ├── globals.css           # Custom styling
+│   │   └── api/
+│   │       ├── ml/
+│   │       │   └── predict/
+│   │       │       └── route.ts  # ⭐ NEW: Python ML integration
+│   │       ├── materials/route.ts
+│   │       ├── papers/route.ts
+│   │       ├── chat/route.ts
+│   │       └── ...               # Other API routes
+│   ├── components/ui/            # shadcn/ui components
+│   └── lib/                      # Utilities & DB client
+├── python-backend/               # ⭐ NEW: Complete Python/Django backend
+│   ├── fastapi_app.py            # FastAPI ML microservice
+│   ├── ml_models.py              # Machine learning models
+│   ├── nlp_engine.py             # NLP extraction engine
+│   ├── manage.py                 # Django management
+│   ├── matdiscoverai/            # Django settings
+│   ├── materials/                # Materials app (models, views, serializers)
+│   ├── papers/                   # Research papers app
+│   ├── ml_services/              # ML services app
+│   ├── nlp_pipeline/             # NLP pipeline app
+│   ├── Dockerfile                # Production container
+│   ├── docker-entrypoint.sh      # Startup script
+│   └── requirements.txt          # Python dependencies
+├── docker-compose.yml            # ⭐ NEW: Full stack orchestration
+├── prisma/
+│   └── schema.prisma            # Database schema
+├── public/
+│   └── logo.svg                  # Custom logo
+├── package.json
+├── next.config.ts
+└── README.md
 ```
 
 ---
 
-## 🎨 Customization
+## 🌐 Vercel Deployment (Frontend Only)
 
-### Changing Colors
+### Step 1: Push to GitHub
 
-Edit `src/app/globals.css`:
-
-```css
-:root {
-  --primary: oklch(0.55 0.25 280); /* Change this */
-  /* ... other colors */
-}
+```bash
+git init
+git add .
+git commit -m "Initial commit: MatDiscoverAI v2.0"
+git remote add origin https://github.com/YOUR_USERNAME/Materials-Discovery-Intelligence-Platform.git
+git push -u origin main
 ```
 
-### Adding New Material Categories
+### Step 2: Deploy to Vercel
 
-1. Update `prisma/schema.prisma` - add to category comment
-2. Update `page.tsx` - add to `categoryColors` and `categoryIcons`
-3. Update seed script - add sample materials
+1. Go to [vercel.com](https://vercel.com) and sign in
+2. Click **"Add New..." → "Project"**
+3. Import your GitHub repository
+4. Configure build settings:
+   - **Framework Preset:** Next.js
+   - **Build Command:** `npm run build` (default)
+   - **Output Directory:** `.next`
+   - **Install Command:** `npm install` (default)
 
-### Integrating Real LLM APIs
+5. Add Environment Variables (if any):
+   ```
+   NEXT_PUBLIC_API_URL=https://your-api-domain.com
+   ```
 
-Replace mock AI responses in `page.tsx`:
+6. Click **"Deploy"**
 
-```typescript
-// Import z-ai-web-dev-sdk
-import ZAI from 'z-ai-web-dev-sdk'
+### Step 3: Verify Deployment
 
-const zai = await ZAI.create()
-const response = await zai.chat.completions.create({
-  messages: [{ role: 'user', content: query }]
-})
+After deployment completes (~2 minutes), your site will be live at:
+```
+https://your-project-name.vercel.app
 ```
 
 ---
 
-## 📄 License
+## 🐳 Full Stack Deployment (Docker)
+
+### Option A: Using Docker Compose (Recommended for Production)
+
+```bash
+# 1. Navigate to project directory
+cd MatDiscoverAI
+
+# 2. Build and start all services
+docker-compose up -d --build
+
+# Services started:
+# - Frontend:     localhost:3000
+# - Django API:   localhost:8000  
+# - FastAPI ML:   localhost:8001
+# - PostgreSQL:   localhost:5432
+# - Redis:        localhost:6379
+
+# 3. View logs
+docker-compose logs -f frontend
+docker-compose logs -f backend
+docker-compose logs -f ml-service
+
+# 4. Stop services
+docker-compose down
+```
+
+### Option B: Manual Docker Build
+
+#### Build Python Backend Image
+
+```bash
+cd python-backend
+docker build -t matdiscoverai-backend .
+docker run -p 8000:8000 -p 8001:8001 matdiscoverai-backend production
+```
+
+#### Build Frontend Image
+
+Create `Dockerfile.frontend` in root:
+
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/public ./public
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+Build and run:
+
+```bash
+docker build -f Dockerfile.frontend -t matdiscoverai-frontend .
+docker run -p 3000:3000 matdiscoverai-frontend
+```
+
+---
+
+## 🐍 Python Backend Setup
+
+### Local Development
+
+```bash
+# 1. Create virtual environment
+cd python-backend
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# or venv\Scripts\activate  # Windows
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Set up database
+python manage.py migrate
+python manage.py seed_database  # Populate with sample data
+
+# 4. Run Django REST API
+python manage.py runserver 0.0.0.0:8000
+
+# 5. In another terminal, run FastAPI ML service
+uvicorn fastapi_app:app --reload --port 8001
+```
+
+### Available Python Endpoints
+
+| Service | Port | Documentation |
+|---------|------|---------------|
+| Django REST API | 8000 | `/api/docs/` |
+| FastAPI ML Service | 8001 | `/docs` (Swagger UI), `/redoc` |
+
+#### Key FastAPI Endpoints
+
+```
+POST /api/v2/predict        - Material property prediction
+POST /api/v2/extract        - NLP extraction from text
+POST /api/v2/chat           - AI material science assistant
+POST /api/v2/similarity     - Find similar materials
+GET  /api/v2/materials      - List/search materials
+POST /api/v2/knowledge-graph - Query knowledge graph
+POST /api/v2/upload         - Upload document for analysis
+GET  /api/v2/stats          - Platform statistics
+GET  /health                - Health check
+```
+
+### Testing Python ML Models
+
+```bash
+# Test ML models directly
+python ml_models.py
+
+# Test NLP engine
+python nlp_engine.py
+
+# Test FastAPI service
+curl -X POST http://localhost:8001/api/v2/predict \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Test Material", "formula": "LiFePO4", "category": "battery"}'
+```
+
+---
+
+## 🔧 Environment Variables
+
+### Frontend (.env.local)
+
+```env
+# Python Backend URLs (optional - fallback built-in if unavailable)
+NEXT_PUBLIC_PYTHON_ML_URL=http://localhost:8001
+NEXT_PUBLIC_PYTHON_API_URL=http://localhost:8000
+
+# Database (Prisma/SQLite default)
+DATABASE_URL="file:./db/custom.db"
+```
+
+### Python Backend (.env or environment)
+
+```env
+# Django Settings
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database (PostgreSQL for production)
+DATABASE_URL=postgres://user:password@localhost:5432/matdiscoverai
+
+# Redis (for Celery)
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/1
+
+# CORS (allow frontend origin)
+CORS_ORIGINS=http://localhost:3000,https://your-vercel-app.vercel.app
+```
+
+### Vercel Environment Variables
+
+Set these in Vercel dashboard under **Settings → Environment Variables**:
+
+```
+NEXT_PUBLIC_API_URL=https://api.yourdomain.com
+NODE_ENV=production
+```
+
+---
+
+## ❓ Troubleshooting
+
+### Common Issues
+
+#### 1. Build Error: "entityIcons is not fixed"
+
+**Solution:** This has been fixed in v2.0. Ensure you have the latest code:
+```bash
+git pull origin main
+# Or re-download the project
+```
+
+#### 2. Python Backend Connection Refused
+
+**Symptom:** Frontend works but ML predictions use fallback mode
+
+**Solutions:**
+- Ensure Python backend is running: `curl http://localhost:8001/health`
+- Check firewall isn't blocking ports 8000/8001
+- Update `PYTHON_ML_URL` in frontend env if different host
+
+#### 3. Database Migration Errors
+
+```bash
+# Reset database
+rm python-backend/db/sqlite3.db
+python manage.py migrate
+python manage.py seed_database
+```
+
+#### 4. Port Already in Use
+
+```bash
+# Check what's using the port
+lsof -i :3000  # or :8000, :8001
+
+# Kill process or change port
+kill -9 <PID>
+```
+
+#### 5. Vercel Deployment Fails
+
+- Check build logs in Vercel dashboard
+- Ensure `next.config.ts` is correct
+- Verify no TypeScript errors locally: `npx tsc --noEmit`
+- Check Node.js version compatibility (should be 18+)
+
+### Getting Help
+
+1. Check the [GitHub Issues](https://github.com/your-repo/issues)
+2. Review this guide thoroughly
+3. Test components individually before full deployment
+
+---
+
+## 📊 Features Overview
+
+### Frontend Features (Next.js)
+- ✅ **Dashboard** with real-time statistics and charts
+- ✅ **Materials Explorer** with filtering and search
+- ✅ **Research Papers** linked to materials
+- ✅ **ML Property Predictions** (with Python integration)
+- ✅ **NLP Text Extraction** from research papers
+- ✅ **Knowledge Graph** visualization
+- ✅ **AI Chat Assistant** for material science Q&A
+- ✅ **Responsive Design** for mobile/tablet/desktop
+
+### Backend Features (Python/Django/FastAPI)
+- ✅ **Django REST API** for CRUD operations
+- ✅ **FastAPI ML Microservice** for predictions
+- ✅ **NLP Pipeline** for entity extraction
+- ✅ **Material Property Prediction Models**
+- ✅ **Stability Classification**
+- ✅ **Similarity Search Engine**
+- ✅ **Material Generator** (candidate discovery)
+- ✅ **Knowledge Graph Querying**
+
+---
+
+## 🔒 Security Notes for Production
+
+1. **Change default secrets** (`SECRET_KEY`, database passwords)
+2. **Enable HTTPS** (automatic on Vercel, use reverse proxy for self-hosted)
+3. **Configure CORS** properly for your domain
+4. **Enable authentication** (Django REST Framework supports Token Auth)
+5. **Use environment variables** for sensitive config
+6. **Regular updates**: `npm update`, `pip install --upgrade -r requirements.txt`
+
+---
+
+## 📈 Scaling Considerations
+
+- **Database**: Migrate from SQLite to PostgreSQL for production
+- **Caching**: Redis already configured for Celery/sessions
+- **CDN**: Vercel Edge Network handles static assets
+- **Monitoring**: Add Sentry (included in requirements)
+- **Load Balancing**: Multiple worker processes configured in gunicorn
+
+---
+
+## 📝 License
 
 This project is created for educational and research purposes.
 
 ---
 
-## 🆘 Support
-
-For issues or questions:
-1. Check the Troubleshooting section above
-2. Review API endpoint documentation
-3. Verify environment variables are set correctly
-4. Check browser console for errors
-
----
-
-## 🎉 Success Checklist
-
-After deployment, verify:
-
-- [ ] Dashboard shows KPI cards with real numbers
-- [ ] Materials tab displays 10+ materials with properties
-- [ ] Research papers show with extracted entities
-- [ ] Knowledge graph renders with nodes and edges
-- [ ] AI Chat responds to questions
-- [ ] File upload dialog opens correctly
-- [ ] All charts render without errors
-- [ ] Mobile responsive layout works
-- [ ] Dark/light theme toggles properly
-- [ ] No console errors in browser
-
----
-
-**Built with ❤️ using Next.js, Tailwind CSS, and shadcn/ui**
-
-*MatDiscoverAI v2.0 - Intelligence-Powered Material Discovery Platform*
+**Last Updated:** July 2026  
+**Version:** 2.0.0  
+**Status:** Production Ready ✅

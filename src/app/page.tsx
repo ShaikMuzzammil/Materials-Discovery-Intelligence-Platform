@@ -441,6 +441,15 @@ const categoryIcons: Record<string, React.ReactNode> = {
   biomedical: <HeartIcon className="w-4 h-4" />
 }
 
+// Entity type icons for knowledge graph
+const entityIcons: Record<string, React.ReactNode> = {
+  material: <Atom className="w-3 h-3" />,
+  property: <Activity className="w-3 h-3" />,
+  method: <FlaskConical className="w-3 h-3" />,
+  application: <Rocket className="w-3 h-3" />,
+  element: <CircleDot className="w-3 h-3" />
+}
+
 // Custom icons
 function SunIcon(props: React.SVGProps<SVGSVGElement>) {
   return (

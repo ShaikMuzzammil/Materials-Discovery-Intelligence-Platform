@@ -1,53 +1,133 @@
 # MatDiscoverAI Python Backend Requirements
-# Django + REST Framework for Material Discovery Platform
+# Complete Django + FastAPI + ML/NLP Stack for Material Discovery Platform
 
-# Core Django
+# ============================================================
+# WEB FRAMEWORKS
+# ============================================================
+
+# Core Django (REST API, Admin, ORM)
 Django>=4.2,<5.0
 djangorestframework>=3.14.0
 django-corsheaders>=4.3.0
 django-filter>=23.5
 
-# Database (optional - for PostgreSQL)
-# psycopg2-binary>=2.9.9
-# django-environ>=11.0.0
+# FastAPI (High-performance ML/NLP microservice)
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
 
-# Machine Learning
+# ============================================================
+# DATABASE
+# ============================================================
+
+# PostgreSQL support (production)
+psycopg2-binary>=2.9.9
+django-environ>=11.0.0
+
+# SQLite for development (built-in)
+
+# ============================================================
+# MACHINE LEARNING - CORE
+# ============================================================
+
 numpy>=1.26.0
 pandas>=2.1.0
 scikit-learn>=1.3.0
 scipy>=1.11.0
 
-# Deep Learning (optional)
+# Gradient Boosting & Advanced ML
+xgboost>=2.0.0
+lightgbm>=4.0.0
+catboost>=1.2.0
+
+# ============================================================
+# DEEP LEARNING (Optional - for advanced models)
+# ============================================================
+
+# PyTorch (recommended)
 # torch>=2.1.0
+# torchvision>=0.16.0
+
+# TensorFlow alternative
 # tensorflow>=2.15.0
 
-# NLP/Text Processing
-spacy>=3.7.0
+# ============================================================
+# NLP / TEXT PROCESSING
+# ============================================================
+
+spaCy>=3.7.0
 nltk>=3.8.0
 transformers>=4.35.0
 sentence-transformers>=2.2.0
 
-# Data Visualization
+# NLP utilities
+textblob>=0.17.1
+regex>=2023.10.3
+
+# ============================================================
+# CHEMISTRY / MATERIALS SCIENCE
+# ============================================================
+
+# Periodic table and chemistry tools
+periodictable>=1.6.0
+pymatgen>=2023.10.11  # Materials Genomics
+ase>=3.22.1  # Atomic Simulation Environment
+rdkit>=2023.9.6  # Cheminformatics
+
+# ============================================================
+# DATA VISUALIZATION
+# ============================================================
+
 matplotlib>=3.8.0
 seaborn>=0.13.0
 plotly>=5.18.0
 
-# API & Utilities
-requests>=2.31.0
-python-dotenv>=1.0.0
-celery>=5.3.0  # For async tasks
+# ============================================================
+# API & UTILITIES
+# ============================================================
 
-# Testing
+requests>=2.31.0
+httpx>=0.25.0
+python-dotenv>=1.0.0
+aiofiles>=23.2.1
+
+# Async task queue
+celery>=5.3.0
+redis>=5.0.0
+
+# ============================================================
+# TESTING
+# ============================================================
+
 pytest>=7.4.0
 pytest-django>=4.7.0
+pytest-asyncio>=0.21.0
 factory-boy>=3.3.0
+httpx>=0.25.0  # For testing async endpoints
 
-# Production
+# ============================================================
+# PRODUCTION / DEPLOYMENT
+# ============================================================
+
 gunicorn>=21.2.0
 whitenoise>=6.6.0
 sentry-sdk[django]>=1.38.0
+prometheus-client>=0.19.0
 
-# Development
+# ============================================================
+# DEVELOPMENT TOOLS
+# ============================================================
+
 black>=23.11.0
 flake8>=6.1.0
+isort>=5.12.0
+mypy>=1.7.0
 ipython>=8.18.0
+jupyterlab>=4.0.0
+
+# ============================================================
+# DOCUMENTATION
+# ============================================================
+
+sphinx>=7.2.0
+sphinx-rtd-theme>=1.3.0
