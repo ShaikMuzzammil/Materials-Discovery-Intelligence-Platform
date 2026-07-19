@@ -2,16 +2,34 @@
   "builds": [
     {
       "src": "backend/wsgi.py",
-      "use": "@vercel/python"
+      "use": "@vercel/python",
+      "config": {
+        "includeFiles": [
+          "backend/**",
+          "ml/**/*.py",
+          "ml/data/**",
+          "ml/models/saved/**",
+          "templates/**",
+          "static/**",
+          "scripts/**",
+          "manage.py",
+          "requirements-vercel.txt"
+        ],
+        "maxLambdaSize": "250mb"
+      }
     }
   ],
   "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "backend/wsgi.py"
     }
   ],
   "env": {
-    "DJANGO_SETTINGS_MODULE": "backend.settings"
+    "DJANGO_SETTINGS_MODULE": "backend.settings_vercel"
   }
 }

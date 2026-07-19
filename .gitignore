@@ -39,15 +39,17 @@ db.sqlite3-journal
 media/
 staticfiles/
 
-# ML artifacts
-ml/models/saved/*.pkl
-ml/models/saved/*.joblib
-ml/models/saved/*.pt
-ml/models/saved/*.h5
+# ML artifacts (uncomment these to ignore .pkl files in dev)
+# IMPORTANT: For Vercel deployment, you MUST commit the .pkl files.
+# See docs/VERCEL_DEPLOYMENT.md for details.
+# ml/models/saved/*.pkl
+# ml/models/saved/*.joblib
+# ml/models/saved/*.pt
+# ml/models/saved/*.h5
 chroma_db/
 *.faiss
-*.pkl
-*.joblib
+# *.pkl
+# *.joblib
 
 # IDE
 .vscode/

@@ -1,3 +1,55 @@
+[project]
+name = "matdiscoverai"
+version = "1.0.0"
+description = "LLM-Powered Scientific Knowledge Extraction & Materials Discovery Framework"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "MatDiscoverAI Team" }
+]
+keywords = ["materials-science", "machine-learning", "nlp", "llm", "django", "rag"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: Django",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# IMPORTANT: Dependencies are intentionally EMPTY here.
+# Vercel's @vercel/python builder will install from requirements-vercel.txt
+# instead (which is a curated, lighter dependency set that fits Vercel's
+# 250MB serverless function size limit).
+#
+# For full installation (Render, Docker, local dev), use requirements.txt.
+dependencies = []
+
+[project.optional-dependencies]
+full = [
+    # All heavy dependencies for full local/dev install
+    # Run: pip install -e .[full]
+    # Or: pip install -r requirements.txt
+]
+
+[project.urls]
+Homepage = "https://github.com/your-username/matdiscoverai"
+Documentation = "https://github.com/your-username/matdiscoverai/tree/main/docs"
+Repository = "https://github.com/your-username/matdiscoverai"
+Issues = "https://github.com/your-username/matdiscoverai/issues"
+
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["backend", "ml"]
+
 [tool.black]
 line-length = 100
 target-version = ["py311"]

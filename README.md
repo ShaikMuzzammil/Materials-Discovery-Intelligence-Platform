@@ -225,8 +225,18 @@ matdiscoverai/                              # 300+ files
     ├── ARCHITECTURE.md                     # Layered architecture + data flow
     ├── DATASET.md                          # Dataset provenance + how to extend
     ├── DEPLOYMENT.md                       # Render/Docker/Vercel/VPS guides
+    ├── VERCEL_DEPLOYMENT.md                # ⭐ Vercel-specific deployment guide
     ├── ML_PIPELINE.md                      # NER/KG/RAG/models deep dive
     └── API.md                              # Original API reference
+
+# Vercel-specific files (for serverless deployment)
+├── pyproject.toml                          # Has [project] table (fixes Vercel uv error)
+├── requirements-vercel.txt                # Lighter deps for Vercel 250MB limit
+├── vercel.json                             # Vercel build config
+├── backend/settings_vercel.py              # Vercel-optimized Django settings
+├── build.sh                                # Vercel build script (migrate + collectstatic)
+├── .python-version                         # Pins Python 3.12
+└── .vercelignore                           # Excludes heavy files from deployment
 ```
 
 ---
