@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Workflows – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-diagram-3"></i> Workflow Orchestration</h3>
+        <p class="text-muted mb-0">End-to-end pipelines: ingest → extract → KG → train → evaluate → report.</p>
+    </div>
+</div>
+
+<div class="card p-4 mb-4">
+    <h6 class="fw-bold mb-3"><i class="bi bi-stars"></i> Predefined templates</h6>
+    <div class="row g-3">
+        {% for key, template in templates.items %}
+            <div class="col-md-4">
+                <div class="card p-3 h-100">
+                    <h6 class="fw-bold">{{ template.name }}</h6>
+                    <p class="small text-muted">{{ template.description }}</p>
+                    <p class="small mb-2"><strong>{{ template.steps|length }} steps:</strong>
+                        {% for step in template.steps %}{{ step.name }}{% if not forloop.last %} → {% endif %}{% endfor %}
+                    </p>
+                    <button class="btn btn-primary btn-sm mt-auto" onclick="createWorkflow('{{ key }}')">
+                        <i class="bi bi-play-circle"></i> Create & Run
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card p-3">
+    <h6 class="fw-bold mb-3">Existing workflows</h6>
+    {% if workflows %}
+        <table class="table table-sm">
+            <thead class="table-light">
+                <tr><th>ID</th><th>Name</th><th>Domain</th><th>Steps</th><th>Created</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for w in workflows %}
+                    <tr>
+                        <td>{{ w.id }}</td>
+                        <td><a href="{% url 'workflow-detail' w.id %}">{{ w.name }}</a></td>
+                        <td>{{ w.domain }}</td>
+                        <td>{{ w.steps|length }}</td>
+                        <td class="small">{{ w.created_at|timesince }} ago</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-primary" onclick="runWorkflow({{ w.id }})">Run</button>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted small">No workflows yet. Use a template above to create one.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function createWorkflow(templateKey) {
+    if (!confirm(`Create workflow from template '${templateKey}' and run it?`)) return;
+    showToast('Creating workflow...', 'info');
+    try {
+        const r = await fetchJSON('/api/workflow/api/create-from-template/', {
+            method: 'POST', body: JSON.stringify({ template_key: templateKey }),
+        });
+        showToast(`Workflow ${r.workflow_id} created. Running...`, 'success');
+        // Run it
+        const run = await fetchJSON(`/api/workflow/api/${r.workflow_id}/run/`, { method: 'POST' });
+        showToast(`Run #${run.run_id} ${run.status}`, 'success');
+        setTimeout(() => location.reload(), 2000);
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+
+async function runWorkflow(id) {
+    showToast('Running workflow...', 'info');
+    try {
+        const r = await fetchJSON(`/api/workflow/api/${id}/run/`, { method: 'POST' });
+        showToast(`Run #${r.run_id} ${r.status} in ${r.duration_seconds}s`, 'success');
+        setTimeout(() => location.reload(), 2000);
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+</script>
+{% endblock %}

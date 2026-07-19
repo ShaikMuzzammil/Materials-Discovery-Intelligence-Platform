@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Materials – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-layers"></i> Material Records</h3>
+        <p class="text-muted mb-0">Cached materials from Materials Project + manual entries.</p>
+    </div>
+    <a href="{% url 'material-compare' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-bar-chart"></i> Compare materials
+    </a>
+</div>
+
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Formula</th><th>Source</th><th>Band gap (eV)</th>
+                    <th>Density (g/cm³)</th><th>Capacity (mAh/g)</th>
+                    <th>Voltage (V)</th><th>Energy density (Wh/kg)</th><th>Stable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in materials %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'material-detail' m.id %}" class="text-decoration-none fw-semibold">
+                                {{ m.formula_pretty|default:m.formula }}
+                            </a>
+                            {% if m.source_id %}<code class="small text-muted">{{ m.source_id }}</code>{% endif %}
+                        </td>
+                        <td><span class="badge text-bg-light text-secondary border">{{ m.source }}</span></td>
+                        <td>{{ m.band_gap|default:"—" }}</td>
+                        <td>{{ m.density|default:"—" }}</td>
+                        <td>{{ m.theoretical_capacity|default:"—" }}</td>
+                        <td>{{ m.average_voltage|default:"—" }}</td>
+                        <td>{{ m.energy_density|default:"—" }}</td>
+                        <td>
+                            {% if m.is_stable %}
+                                <span class="badge text-bg-success">stable</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="8" class="text-muted text-center py-4">No material records yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+{% block title %}{{ info.name }} – Domains{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'domains-landing' %}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left"></i> All domains
+    </a>
+</div>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h2 class="fw-bold mb-1">{{ info.name }}</h2>
+            <p class="text-muted mb-2">{{ info.description }}</p>
+            <div class="d-flex gap-2 flex-wrap">
+                {% for target in info.targets %}
+                    <span class="badge text-bg-primary">{{ target }} <small class="text-light opacity-75">({{ info.target_units|default:'' }})</small></span>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="text-end">
+            <div class="display-6 fw-bold text-{{ quality.grade|cut:"+"|cut:"-"|lower }}">{{ quality.score }}</div>
+            <small class="text-muted">Quality / 100 ({{ quality.grade }})</small>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs -->
+<ul class="nav nav-tabs mb-3" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#predict">Predict</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#analyze">Dataset Analysis</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#train">Train</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#models">Models</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#explain">Explain</button></li>
+</ul>
+
+<div class="tab-content">
+    <!-- Predict tab -->
+    <div class="tab-pane fade show active" id="predict">
+        <div class="row g-3">
+            <div class="col-md-5">
+                <div class="card p-4">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-sliders"></i> Prediction input</h6>
+                    <form id="predictForm">
+                        <input type="hidden" name="domain" value="{{ domain }}">
+                        <div class="mb-3">
+                            <label class="form-label">Target property</label>
+                            <select class="form-select" name="target" id="targetSelect">
+                                {% for target in info.targets %}
+                                    <option value="{{ target }}">{{ target }} ({{ info.target_units|default:'' }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% for col in info.feature_columns %}
+                            <div class="mb-3">
+                                <label class="form-label">{{ col|title }}</label>
+                                {% if col == 'formula' %}
+                                    <input type="text" class="form-control" name="formula" value="LiFePO4" required>
+                                {% elif col == 'synthesis_method' %}
+                                    <select class="form-select" name="synthesis_method">
+                                        <option value="sol-gel">sol-gel</option>
+                                        <option value="solid-state">solid-state</option>
+                                        <option value="hydrothermal">hydrothermal</option>
+                                        <option value="co-precipitation">co-precipitation</option>
+                                        <option value="ball-milling">ball-milling</option>
+                                    </select>
+                                {% elif col == 'synthesis_temp_c' %}
+                                    <input type="number" class="form-control" name="synthesis_temp_c" value="700">
+                                {% elif col == 'processing_method' %}
+                                    <select class="form-select" name="processing_method">
+                                        <option value="annealed">annealed</option>
+                                        <option value="quenched">quenched</option>
+                                        <option value="tempered">tempered</option>
+                                        <option value="hot-rolled">hot-rolled</option>
+                                    </select>
+                                {% elif col == 'heat_treatment_temp_c' %}
+                                    <input type="number" class="form-control" name="heat_treatment_temp_c" value="600">
+                                {% elif col == 'crystal_structure' %}
+                                    <select class="form-select" name="crystal_structure">
+                                        <option value="zincblende">zincblende</option>
+                                        <option value="diamond">diamond</option>
+                                        <option value="wurtzite">wurtzite</option>
+                                        <option value="rocksalt">rocksalt</option>
+                                    </select>
+                                {% elif col == 'doping_type' %}
+                                    <select class="form-select" name="doping_type">
+                                        <option value="intrinsic">intrinsic</option>
+                                        <option value="n-type">n-type</option>
+                                        <option value="p-type">p-type</option>
+                                    </select>
+                                {% elif col == 'catalyst_type' %}
+                                    <select class="form-select" name="catalyst_type">
+                                        <option value="metal">metal</option>
+                                        <option value="alloy">alloy</option>
+                                        <option value="oxide">oxide</option>
+                                        <option value="phosphide">phosphide</option>
+                                        <option value="sulfide">sulfide</option>
+                                        <option value="single-atom">single-atom</option>
+                                    </select>
+                                {% elif col == 'support_material' %}
+                                    <input type="text" class="form-control" name="support_material" value="Vulcan XC-72">
+                                {% elif col == 'cell_type' %}
+                                    <select class="form-select" name="cell_type">
+                                        <option value="mono-Si">mono-Si</option>
+                                        <option value="perovskite">perovskite</option>
+                                        <option value="thin-film">thin-film</option>
+                                        <option value="organic">organic</option>
+                                    </select>
+                                {% elif col == 'deposition_method' %}
+                                    <input type="text" class="form-control" name="deposition_method" value="Czochralski">
+                                {% elif col == 'storage_mechanism' %}
+                                    <select class="form-select" name="storage_mechanism">
+                                        <option value="metal-hydride">metal-hydride</option>
+                                        <option value="intermetallic">intermetallic</option>
+                                        <option value="complex-hydride">complex-hydride</option>
+                                        <option value="physisorption">physisorption</option>
+                                    </select>
+                                {% elif col == 'particle_size_nm' %}
+                                    <input type="number" class="form-control" name="particle_size_nm" value="1000">
+                                {% elif col == 'smiles' %}
+                                    <input type="text" class="form-control" name="smiles" value="*CC(=O)OC*">
+                                {% elif col == 'polymer_type' %}
+                                    <input type="text" class="form-control" name="polymer_type" value="PMMA">
+                                {% elif col == 'molecular_weight' %}
+                                    <input type="number" class="form-control" name="molecular_weight" value="120000">
+                                {% else %}
+                                    <input type="text" class="form-control" name="{{ col }}" value="">
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div class="mb-3">
+                            <label class="form-label">Algorithm</label>
+                            <select class="form-select" name="algorithm">
+                                <option value="random_forest">Random Forest</option>
+                                <option value="gradient_boosting">Gradient Boosting</option>
+                                <option value="xgboost">XGBoost</option>
+                                <option value="lightgbm">LightGBM</option>
+                                <option value="linear">Linear</option>
+                                <option value="ridge">Ridge</option>
+                                <option value="lasso">Lasso</option>
+                                <option value="mlp">MLP (Neural Net)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <span id="predictSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                            <i class="bi bi-magic"></i> Predict
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="card p-4 mb-3" id="resultCard" style="display: none;">
+                    <h6 class="fw-bold mb-3"><i class="bi bi-lightning-charge"></i> Prediction</h6>
+                    <div class="text-center mb-3">
+                        <div class="display-3 fw-bold text-primary" id="resultValue">—</div>
+                        <div class="text-muted small" id="resultUnit"></div>
+                        <span class="badge text-bg-light text-secondary border mt-2" id="resultCI"></span>
+                    </div>
+                    <div id="resultMetrics" class="small text-muted"></div>
+                </div>
+                <div class="card p-3" id="explainCard" style="display: none;">
+                    <h6 class="fw-bold mb-2"><i class="bi bi-graph-up"></i> Feature contributions (SHAP)</h6>
+                    <div id="explainChart" style="height: 300px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analyze tab -->
+    <div class="tab-pane fade" id="analyze">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h6 class="fw-bold mb-3">Target distributions</h6>
+                    <div id="distChart" style="height: 350px;"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h6 class="fw-bold mb-3">Statistics summary</h6>
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr><th>Column</th><th>Mean</th><th>Std</th><th>Min</th><th>Max</th></tr>
+                            </thead>
+                            <tbody id="statsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h6 class="fw-bold mb-3">Correlation heatmap</h6>
+                    <div id="corrChart" style="height: 350px;"></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card p-3">
+                    <h6 class="fw-bold mb-3">Outliers (IQR)</h6>
+                    <div id="outlierList" style="max-height: 350px; overflow-y: auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Train tab -->
+    <div class="tab-pane fade" id="train">
+        <div class="card p-4">
+            <h6 class="fw-bold mb-3">Train models for {{ info.name }}</h6>
+            <form id="trainForm" class="row g-2 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label small">Target</label>
+                    <select class="form-select" name="target">
+                        <option value="all">All targets</option>
+                        {% for target in info.targets %}<option value="{{ target }}">{{ target }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small">Algorithm</label>
+                    <select class="form-select" name="algorithm">
+                        <option value="random_forest">Random Forest</option>
+                        <option value="gradient_boosting">Gradient Boosting</option>
+                        <option value="xgboost">XGBoost</option>
+                        <option value="lightgbm">LightGBM</option>
+                        <option value="mlp">MLP</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <span id="trainSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                        <i class="bi bi-play-circle"></i> Train
+                    </button>
+                </div>
+            </form>
+            <div id="trainResult" class="mt-3"></div>
+        </div>
+    </div>
+
+    <!-- Models tab -->
+    <div class="tab-pane fade" id="models">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Trained models for {{ info.name }}</h6>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                        <tr><th>Target</th><th>Algorithm</th><th>R²</th><th>RMSE</th><th>MAE</th><th>CV R²</th><th>Size (KB)</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for m in trained_models %}
+                            <tr>
+                                <td><code>{{ m.target }}</code></td>
+                                <td>{{ m.algorithm }}</td>
+                                <td>{{ m.metrics.r2|floatformat:3|default:"—" }}</td>
+                                <td>{{ m.metrics.rmse|floatformat:2|default:"—" }}</td>
+                                <td>{{ m.metrics.mae|floatformat:2|default:"—" }}</td>
+                                <td>{{ m.metrics.cv_r2_mean|floatformat:3|default:"—" }}</td>
+                                <td>{{ m.size_kb }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="7" class="text-muted text-center py-3">No models trained yet. Use the Train tab.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Explain tab -->
+    <div class="tab-pane fade" id="explain">
+        <div class="card p-4">
+            <h6 class="fw-bold mb-3">Model explainability</h6>
+            <p class="text-muted">Run a prediction in the Predict tab; SHAP values will appear here automatically.</p>
+            <div id="explainChartLarge" style="height: 400px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const DOMAIN = "{{ domain }}";
+
+document.getElementById('predictForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    document.getElementById('predictSpinner').classList.remove('d-none');
+    document.getElementById('resultCard').style.display = 'none';
+    document.getElementById('explainCard').style.display = 'none';
+    try {
+        const r = await fetchJSON('/api/domains/api/predict/', {
+            method: 'POST', body: JSON.stringify(data),
+        });
+        document.getElementById('resultValue').textContent = r.prediction;
+        document.getElementById('resultUnit').textContent = r.metrics?.rmse ? `± ${r.metrics.rmse.toFixed(2)} (RMSE)` : '';
+        document.getElementById('resultCI').textContent = `95% CI: [${r.confidence_low}, ${r.confidence_high}]`;
+        document.getElementById('resultMetrics').innerHTML = `
+            <strong>Algorithm:</strong> ${r.algorithm}<br>
+            <strong>R²:</strong> ${r.metrics?.r2?.toFixed(3) || 'N/A'} |
+            <strong>RMSE:</strong> ${r.metrics?.rmse?.toFixed(2) || 'N/A'} |
+            <strong>MAE:</strong> ${r.metrics?.mae?.toFixed(2) || 'N/A'}<br>
+            <strong>CV R²:</strong> ${r.metrics?.cv_r2_mean?.toFixed(3) || 'N/A'} ± ${r.metrics?.cv_r2_std?.toFixed(3) || 'N/A'}<br>
+            <strong>Duration:</strong> ${r.duration_ms} ms
+        `;
+        document.getElementById('resultCard').style.display = 'block';
+
+        // Fetch SHAP explanation
+        explainPrediction(data);
+    } catch (err) {
+        showToast(`Prediction failed: ${err.message}`, 'danger');
+    } finally {
+        document.getElementById('predictSpinner').classList.add('d-none');
+    }
+});
+
+async function explainPrediction(inputData) {
+    try {
+        const r = await fetchJSON('/api/domains/api/explain/', {
+            method: 'POST',
+            body: JSON.stringify({
+                domain: inputData.domain,
+                target: inputData.target,
+                algorithm: inputData.algorithm,
+                input_features: inputData,
+            }),
+        });
+        document.getElementById('explainCard').style.display = 'block';
+        const contribs = r.contributions || [];
+        Plotly.newPlot('explainChart', [{
+            type: 'bar',
+            orientation: 'h',
+            y: contribs.map(c => c.feature),
+            x: contribs.map(c => c.shap),
+            marker: { color: contribs.map(c => c.shap > 0 ? '#10b981' : '#ef4444') },
+        }], { ...PLOTLY_LAYOUT, margin: { l: 150, r: 20, t: 10, b: 30 },
+              xaxis: { title: 'SHAP value (impact on prediction)' } }, PLOTLY_CONFIG);
+    } catch (e) { console.error(e); }
+}
+
+// Analyze tab: load dataset statistics
+async function loadAnalysis() {
+    try {
+        const r = await fetchJSON(`/api/domains/api/${DOMAIN}/analyze/`);
+        // Target distribution chart
+        const targets = Object.keys(r.target_distributions || {});
+        if (targets.length > 0) {
+            const traces = targets.slice(0, 4).map(t => {
+                const d = r.target_distributions[t];
+                return {
+                    type: 'bar', name: t,
+                    x: d.bins.slice(0, -1).map((b, i) => `${b.toFixed(1)}-${d.bins[i+1].toFixed(1)}`),
+                    y: d.counts,
+                };
+            });
+            Plotly.newPlot('distChart', traces, { ...PLOTLY_LAYOUT, barmode: 'group', legend: { orientation: 'h', y: -0.3 } }, PLOTLY_CONFIG);
+        }
+
+        // Stats table
+        const stats = r.statistics || {};
+        document.getElementById('statsBody').innerHTML = Object.entries(stats).map(([col, s]) => `
+            <tr><td><code>${col}</code></td><td>${s.mean.toFixed(2)}</td><td>${s.std.toFixed(2)}</td>
+            <td>${s.min.toFixed(2)}</td><td>${s.max.toFixed(2)}</td></tr>
+        `).join('');
+
+        // Outliers
+        const outliers = r.outliers || {};
+        if (Object.keys(outliers).length === 0) {
+            document.getElementById('outlierList').innerHTML = '<p class="text-muted small">No outliers detected.</p>';
+        } else {
+            document.getElementById('outlierList').innerHTML = Object.entries(outliers).map(([col, o]) => `
+                <div class="border-bottom py-2">
+                    <strong>${col}</strong>: ${o.count} outliers (${o.percent}%)<br>
+                    <small class="text-muted">Bounds: [${o.bounds[0].toFixed(2)}, ${o.bounds[1].toFixed(2)}]</small>
+                </div>
+            `).join('');
+        }
+    } catch (e) { console.error(e); }
+}
+
+// Train tab
+document.getElementById('trainForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = Object.fromEntries(new FormData(e.target));
+    data.domain = DOMAIN;
+    document.getElementById('trainSpinner').classList.remove('d-none');
+    document.getElementById('trainResult').innerHTML = '<div class="alert alert-info small">Training… this may take 30-60 seconds per target.</div>';
+    try {
+        const r = await fetchJSON('/api/domains/api/train/', {
+            method: 'POST', body: JSON.stringify(data),
+        });
+        let html = `<div class="alert alert-success small"><strong>Training complete.</strong><br>
+            <pre class="mb-0 mt-2" style="max-height:300px;overflow:auto;">${JSON.stringify(r, null, 2)}</pre></div>`;
+        document.getElementById('trainResult').innerHTML = html;
+        showToast('Training complete', 'success');
+    } catch (e) {
+        document.getElementById('trainResult').innerHTML = `<div class="alert alert-danger small">${e.message}</div>`;
+    } finally {
+        document.getElementById('trainSpinner').classList.add('d-none');
+    }
+});
+
+loadAnalysis();
+</script>
+{% endblock %}

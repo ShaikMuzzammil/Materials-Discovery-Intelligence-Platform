@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ experiment.name }} – Experiment{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'experiments-landing' %}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left"></i> All experiments
+    </a>
+</div>
+<div class="card p-4 mb-4">
+    <h3 class="fw-bold">{{ experiment.name }}</h3>
+    <p class="text-muted">{{ experiment.description }}</p>
+</div>
+
+<div class="card p-3">
+    <h6 class="fw-bold mb-3">Runs ({{ runs|length }})</h6>
+    <table class="table table-sm">
+        <thead class="table-light">
+            <tr><th>ID</th><th>Target</th><th>Algorithm</th><th>R²</th><th>RMSE</th><th>Status</th><th>Duration</th><th>Created</th></tr>
+        </thead>
+        <tbody>
+            {% for r in runs %}
+                <tr>
+                    <td>{{ r.id }}</td>
+                    <td>{{ r.target }}</td>
+                    <td>{{ r.algorithm }}</td>
+                    <td>{{ r.metrics.r2|floatformat:3|default:"—" }}</td>
+                    <td>{{ r.metrics.rmse|floatformat:2|default:"—" }}</td>
+                    <td><span class="badge text-bg-{% if r.status == 'completed' %}success{% elif r.status == 'running' %}info{% else %}danger{% endif %}">{{ r.status }}</span></td>
+                    <td>{{ r.duration_seconds|floatformat:1 }}s</td>
+                    <td class="small">{{ r.created_at|timesince }} ago</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

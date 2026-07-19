@@ -1,0 +1,86 @@
+formula,synthesis_method,synthesis_temp_c,capacity_mah_g,cycle_life,voltage_v,energy_density_wh_kg,safety_score,cost_usd_kg
+LiFePO4,sol-gel,700,165,2000,3.45,580,0.95,15
+LiFePO4,solid-state,750,160,1800,3.4,550,0.95,16
+LiFePO4,hydrothermal,200,150,1500,3.4,520,0.93,18
+LiFePO4,co-precipitation,700,162,2200,3.45,570,0.95,17
+LiCoO2,solid-state,850,140,800,3.9,560,0.65,45
+LiCoO2,co-precipitation,800,145,1000,3.9,580,0.65,42
+LiCoO2,sol-gel,800,142,900,3.9,565,0.65,44
+LiMn2O4,sol-gel,600,120,1200,4.0,480,0.85,12
+LiMn2O4,solid-state,700,110,1000,4.0,440,0.85,13
+LiMn2O4,hydrothermal,180,115,1300,4.0,460,0.86,14
+LiNi0.8Co0.1Mn0.1O2,co-precipitation,750,200,500,3.7,740,0.7,35
+LiNi0.8Co0.1Mn0.1O2,sol-gel,770,195,600,3.7,720,0.7,38
+LiNi0.6Co0.2Mn0.2O2,co-precipitation,780,175,1000,3.7,650,0.78,30
+LiNi0.5Co0.2Mn0.3O2,co-precipitation,800,165,1500,3.7,610,0.82,28
+Li1.2Mn0.6Ni0.2O2,co-precipitation,800,250,200,3.5,875,0.6,40
+Li1.2Mn0.6Ni0.2O2,sol-gel,820,240,250,3.5,840,0.6,42
+Li4Ti5O12,solid-state,850,175,3000,1.5,260,0.98,20
+Li4Ti5O12,sol-gel,800,170,5000,1.5,250,0.98,22
+Si,ball-milling,25,3000,500,0.4,1200,0.6,25
+Si-C composite,ball-milling,600,1500,800,0.5,750,0.7,30
+Si-C composite,pyrolysis,900,1600,1000,0.5,800,0.72,32
+Graphite,solid-state,3000,372,2000,0.15,56,0.9,8
+Hard carbon,pyrolysis,1200,300,1500,0.2,60,0.9,10
+Li metal,evaporation,25,3860,200,0.0,0,0.4,80
+SnO2,hydrothermal,180,780,300,0.6,470,0.65,35
+MoS2,hydrothermal,200,900,600,0.7,630,0.7,50
+MoS2-rGO,hydrothermal,500,1100,800,0.7,770,0.75,60
+PANI-S,in-situ polymerization,150,1100,400,2.1,2310,0.7,45
+S-KB,ball-milling,155,1000,300,2.1,2100,0.7,18
+Co-N-C/S,pyrolysis,900,1100,500,2.1,2310,0.7,55
+Na3V2(PO4)2F3,hydrothermal,180,128,1000,3.9,500,0.85,8
+Na3V2(PO4)3,sol-gel,700,110,1500,3.4,374,0.88,7
+Na0.7Fe0.4Mn0.6O2,solid-state,800,120,600,3.0,360,0.75,6
+Hard carbon (Na),pyrolysis,1300,280,1200,0.2,56,0.9,10
+NaTi2(PO4)3,sol-gel,700,130,2000,2.5,325,0.92,15
+V2O5,hydrothermal,180,280,400,2.6,728,0.7,40
+V2O5-rGO,hydrothermal,500,320,600,2.6,832,0.75,55
+LiV3O8,solid-state,580,280,500,2.5,700,0.78,38
+TiO2 (anatase),hydrothermal,180,200,1000,1.8,360,0.9,12
+TiO2 (B),hydrothermal,200,230,1500,1.8,414,0.92,14
+Li7La3Zr2O12,solid-state,1100,0,0,0,0,0.95,80
+Li6.4La3Zr1.4Ta0.6O12,solid-state,1180,0,0,0,0,0.95,90
+Li2S-P2S5 glass,ball-milling,25,0,0,0,0,0.85,100
+Li3InCl6,mechanochemical,25,0,0,0,0,0.8,200
+LiFePO4-C,sol-gel,700,168,2500,3.45,590,0.95,18
+LiFePO4-CNT,sol-gel,700,170,2800,3.45,600,0.95,22
+LiCoO2-Al2O3,solid-state,850,148,1200,3.9,590,0.7,47
+NCM811-Zr,co-precipitation,750,205,800,3.7,760,0.75,38
+NCM622-Zr,co-precipitation,780,180,1200,3.7,670,0.8,32
+Li-rich-LLO-Al2O3,co-precipitation,800,255,300,3.5,890,0.65,42
+LiMn2O4-LiBOB,sol-gel,600,125,1500,4.0,500,0.88,14
+Li2MnO3,solid-state,900,230,150,3.4,780,0.55,35
+Li2MoO4,solid-state,600,200,250,2.5,500,0.7,30
+Li2CuO2,solid-state,750,180,200,2.8,505,0.6,28
+Li2NiO2,solid-state,700,200,300,3.0,600,0.55,32
+LiFeSO4F,ionothermal,350,140,800,3.6,505,0.85,25
+Li2FeSiO4,sol-gel,700,165,600,3.1,510,0.88,18
+Li2MnSiO4,sol-gel,700,150,400,3.2,480,0.85,16
+Li2CoSiO4,sol-gel,750,140,350,3.3,460,0.7,22
+K2FeSO4F,solid-state,400,130,700,3.6,470,0.85,20
+Na2FeSO4F,ionothermal,350,125,750,3.5,440,0.85,18
+LiFeBO3,solid-state,600,180,500,3.0,540,0.85,22
+LiMnBO3,solid-state,650,160,400,3.1,500,0.85,20
+LiCoBO3,solid-state,700,150,350,3.2,480,0.7,25
+LiVS2,solid-state,600,250,300,2.0,500,0.7,35
+LiCrS2,solid-state,650,200,250,2.2,440,0.65,40
+LiTiS2,solid-state,600,230,400,2.1,480,0.85,28
+LiNiS2,solid-state,650,220,300,2.0,440,0.55,30
+Li2SnO3,solid-state,800,250,200,1.5,375,0.7,35
+Li2PbO3,solid-state,700,180,150,2.5,450,0.5,50
+Li2RuO3,solid-state,900,250,200,3.0,750,0.7,200
+Li2IrO3,solid-state,1000,220,250,3.2,700,0.7,500
+MoO3,hydrothermal,200,280,350,2.5,700,0.7,35
+WO3,hydrothermal,200,200,400,2.0,400,0.75,38
+Fe2O3,hydrothermal,200,250,300,1.8,450,0.85,8
+Fe3O4,hydrothermal,200,280,350,1.5,420,0.85,10
+Co3O4,hydrothermal,200,320,400,2.0,640,0.7,45
+NiO,hydrothermal,200,250,350,1.8,450,0.7,25
+CuO,hydrothermal,200,280,300,1.8,500,0.7,18
+ZnO,hydrothermal,200,250,300,1.5,375,0.85,12
+MnO2,hydrothermal,180,300,400,2.0,600,0.8,15
+Mn2O3,solid-state,600,220,300,1.8,400,0.8,12
+CoS2,hydrothermal,200,400,500,1.5,600,0.7,35
+NiS2,hydrothermal,200,350,400,1.5,525,0.7,25
+FeS2,hydrothermal,200,380,450,1.5,570,0.8,10

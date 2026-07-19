@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Material Domains – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-layers-3"></i> Material Domains</h3>
+        <p class="text-muted mb-0">7 specialized domains, each with its own dataset, ML models, and analysis.</p>
+    </div>
+    <a href="{% url 'domains-compare' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-bar-chart-line"></i> Compare all
+    </a>
+</div>
+
+<div class="row g-3 mb-4" id="domain-cards">
+    <!-- Cards populated via JS -->
+</div>
+
+<div class="card p-4">
+    <h5 class="fw-bold mb-3"><i class="bi bi-grip-horizontal"></i> Pipeline overview</h5>
+    <div class="row text-center">
+        <div class="col-md-3 mb-3">
+            <div class="p-3 rounded bg-light h-100">
+                <i class="bi bi-database display-6 text-primary"></i>
+                <h6 class="fw-bold mt-2">7 Datasets</h6>
+                <p class="small text-muted mb-0">599 samples total across battery, alloys, polymers, semiconductors, catalysts, solar, hydrogen.</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="p-3 rounded bg-light h-100">
+                <i class="bi bi-cpu display-6 text-primary"></i>
+                <h6 class="fw-bold mt-2">8 Algorithms</h6>
+                <p class="small text-muted mb-0">RF, GBM, XGBoost, LightGBM, MLP, Linear, Ridge, Lasso.</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="p-3 rounded bg-light h-100">
+                <i class="bi bi-graph-up display-6 text-primary"></i>
+                <h6 class="fw-bold mt-2">40+ Targets</h6>
+                <p class="small text-muted mb-0">Each domain has 6 prediction targets (capacity, strength, band gap, etc.).</p>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="p-3 rounded bg-light h-100">
+                <i class="bi bi-magic display-6 text-primary"></i>
+                <h6 class="fw-bold mt-2">Advanced ML</h6>
+                <p class="small text-muted mb-0">SHAP explainability, conformal uncertainty, Optuna tuning.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadDomains() {
+    const data = await fetchJSON('/api/domains/api/');
+    const domains = data.domains;
+    let html = '';
+    for (const d of domains) {
+        const colorMap = {
+            battery: '#dc2626', alloys: '#0891b2', polymers: '#7c3aed',
+            semiconductors: '#059669', catalysts: '#d97706',
+            solar: '#ca8a04', hydrogen: '#2563eb',
+        };
+        const color = colorMap[d.key] || '#6b7280';
+        html += `
+            <div class="col-md-6 col-lg-4">
+                <a href="/domains/${d.key}/" class="card p-4 h-100 text-decoration-none text-dark domain-card" style="border-left: 4px solid ${color};">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <span class="badge" style="background:${color}">${d.key.toUpperCase()}</span>
+                            <h5 class="fw-bold mt-2 mb-1">${d.name}</h5>
+                            <p class="small text-muted mb-2">${d.description}</p>
+                        </div>
+                        <i class="bi bi-arrow-right-circle text-muted fs-3"></i>
+                    </div>
+                    <div class="d-flex gap-3 mt-2">
+                        <div>
+                            <div class="h6 mb-0">${d.targets.length}</div>
+                            <small class="text-muted">targets</small>
+                        </div>
+                        <div>
+                            <div class="h6 mb-0">${d.feature_columns.length}</div>
+                            <small class="text-muted">features</small>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        ${d.targets.slice(0,4).map(t => `<span class="badge text-bg-light text-secondary border me-1 mb-1 small">${t}</span>`).join('')}
+                        ${d.targets.length > 4 ? `<span class="badge text-bg-light text-muted">+${d.targets.length-4}</span>` : ''}
+                    </div>
+                </a>
+            </div>
+        `;
+    }
+    document.getElementById('domain-cards').innerHTML = html;
+}
+loadDomains();
+</script>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Knowledge Graph – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-share"></i> Materials Knowledge Graph</h3>
+        <p class="text-muted mb-0">Aggregated entities + relations across all extracted papers.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary btn-sm" onclick="buildKG()">
+            <i class="bi bi-hammer"></i> Build graph
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" onclick="loadGraph()">
+            <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-3">
+        <div class="card stat-card p-3">
+            <div class="stat-value" id="kg-nodes">—</div>
+            <div class="stat-label">Nodes</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3" style="border-left-color: var(--mda-accent);">
+            <div class="stat-value" style="color: var(--mda-accent);" id="kg-edges">—</div>
+            <div class="stat-label">Edges</div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <label class="form-label small mb-1">Explore subgraph</label>
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="nodeInput" placeholder="e.g. LiFePO4">
+                <button class="btn btn-outline-primary" onclick="loadSubgraph()">Go</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-3 mb-4">
+    <h6 class="fw-bold mb-3">Interactive graph visualization</h6>
+    <div id="graph-canvas" style="height: 600px; background: #fafafa; border-radius: 0.5rem;"></div>
+    <p class="small text-muted mt-2 mb-0">
+        Tip: drag nodes to rearrange. Hover over a node to see its type & mention count.
+    </p>
+</div>
+
+<div class="card p-3 mb-4">
+    <h6 class="fw-bold mb-3">Material recommendation</h6>
+    <div class="row g-2">
+        <div class="col-md-8">
+            <select class="form-select" id="propertySelect">
+                <option value="capacity">capacity</option>
+                <option value="cycle life">cycle life</option>
+                <option value="voltage">voltage</option>
+                <option value="conductivity">conductivity</option>
+                <option value="energy density">energy density</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-primary w-100" onclick="recommendMaterials()">
+                <i class="bi bi-stars"></i> Recommend materials
+            </button>
+        </div>
+    </div>
+    <div id="recommendationResults" class="mt-3"></div>
+</div>
+
+<div class="card p-3">
+    <h6 class="fw-bold mb-3">Recent snapshots</h6>
+    <table class="table table-sm">
+        <thead class="table-light">
+            <tr><th>ID</th><th>Created</th><th>Nodes</th><th>Edges</th><th>Trigger</th></tr>
+        </thead>
+        <tbody>
+            {% for s in snapshots %}
+                <tr>
+                    <td>{{ s.id }}</td>
+                    <td>{{ s.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>{{ s.node_count }}</td>
+                    <td>{{ s.edge_count }}</td>
+                    <td><code>{{ s.triggered_by|truncatechars:40 }}</code></td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="5" class="text-muted text-center py-3">No snapshots yet.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script>
+let network = null;
+
+async function buildKG() {
+    if (!confirm('Build knowledge graph from all extracted entities?')) return;
+    showToast('Building knowledge graph…', 'info');
+    try {
+        const r = await fetchJSON('/api/kg/api/build/', { method: 'POST' });
+        showToast(`KG built: ${r.nodes} nodes, ${r.edges} edges`, 'success');
+        loadGraph();
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+
+async function loadGraph() {
+    try {
+        const data = await fetchJSON('/api/kg/api/graph/');
+        document.getElementById('kg-nodes').textContent = data.nodes?.length || 0;
+        document.getElementById('kg-edges').textContent = data.edges?.length || 0;
+        renderGraph(data);
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+
+async function loadSubgraph() {
+    const node = document.getElementById('nodeInput').value.trim();
+    if (!node) return;
+    const data = await fetchJSON(`/api/kg/api/subgraph/?node=${encodeURIComponent(node)}&depth=2`);
+    renderGraph(data);
+}
+
+function renderGraph(data) {
+    if (!data.nodes || data.nodes.length === 0) {
+        showToast('Graph is empty – build it first.', 'info');
+        return;
+    }
+    const nodes = data.nodes.map(n => {
+        const colors = {
+            MATERIAL: '#0d6efd', CHEMICAL_FORMULA: '#f59e0b', PROPERTY: '#198754',
+            SYNTHESIS_METHOD: '#6f42c1', MEASUREMENT: '#0dcaf0', METRIC: '#dc3545',
+            APPLICATION: '#6c757d', EQUIPMENT: '#fd7e14', TEMPERATURE: '#d63384',
+        };
+        return {
+            id: n.id, label: n.label,
+            color: colors[n.type] || '#adb5bd',
+            title: `${n.type} · mentions: ${n.mention_count}`,
+            shape: 'dot', size: 10 + Math.min(n.mention_count * 3, 30),
+        };
+    });
+    const edges = data.edges.map((e, i) => ({
+        id: i, from: e.source, to: e.target, label: e.relation,
+        arrows: 'to', font: { size: 9, align: 'middle' },
+    }));
+
+    if (network) network.destroy();
+    network = new vis.Network(
+        document.getElementById('graph-canvas'),
+        { nodes: new vis.DataSet(nodes), edges: new vis.DataSet(edges) },
+        {
+            layout: { improvedLayout: true },
+            physics: { barnesHut: { gravitationalConstant: -3000 } },
+            interaction: { hover: true, tooltipDelay: 100 },
+        }
+    );
+}
+
+async function recommendMaterials() {
+    const prop = document.getElementById('propertySelect').value;
+    try {
+        const recs = await fetchJSON(`/api/kg/api/recommend/?property=${encodeURIComponent(prop)}`);
+        const html = recs.length === 0
+            ? '<p class="text-muted small">No recommendations. Build the graph first.</p>'
+            : `<table class="table table-sm"><thead><tr><th>#</th><th>Material</th><th>Type</th><th>Score</th><th>Mentions</th></tr></thead><tbody>
+                ${recs.map((r, i) => `<tr><td>${i+1}</td><td><strong>${r.label}</strong></td><td>${r.type}</td><td>${r.score}</td><td>${r.mention_count}</td></tr>`).join('')}
+               </tbody></table>`;
+        document.getElementById('recommendationResults').innerHTML = html;
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+
+loadGraph();
+</script>
+{% endblock %}

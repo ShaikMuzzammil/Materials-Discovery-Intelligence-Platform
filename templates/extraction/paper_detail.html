@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}{{ paper.title|truncatewords:6 }} – Extraction{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'extraction-dashboard' %}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left"></i> Back to extraction dashboard
+    </a>
+</div>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <span class="badge text-bg-primary">{{ paper.source|upper }}</span>
+            <span class="badge text-bg-{% if paper.status == 'extracted' %}success{% else %}info{% endif %}">{{ paper.status }}</span>
+            <h4 class="fw-bold mt-2">{{ paper.title }}</h4>
+            <p class="text-muted small mb-0">{{ paper.authors|truncatewords:5 }}</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="runExtraction({{ paper.id }})">
+            <i class="bi bi-play-circle"></i> Re-run extraction
+        </button>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold">Entities ({{ entities|length }})</h6>
+            <div style="max-height: 600px; overflow-y: auto;">
+                {% for e in entities %}
+                    <div class="border-bottom py-2">
+                        <span class="entity-badge entity-{{ e.entity_type }}">{{ e.entity_type }}</span>
+                        <strong>{{ e.text }}</strong>
+                        <span class="badge text-bg-light text-muted">{{ e.confidence|floatformat:2 }}</span>
+                        <span class="badge text-bg-light text-muted">{{ e.extractor }}</span>
+                    </div>
+                {% empty %}
+                    <p class="text-muted small">No entities – click "Re-run extraction".</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold">Relations ({{ relations|length }})</h6>
+            <div style="max-height: 600px; overflow-y: auto;">
+                {% for r in relations %}
+                    <div class="border-bottom py-2">
+                        <div>
+                            <span class="entity-badge entity-{{ r.subject.entity_type }}">{{ r.subject.text }}</span>
+                            <i class="bi bi-arrow-right mx-1"></i>
+                            <span class="badge text-bg-dark">{{ r.relation_type }}</span>
+                            <i class="bi bi-arrow-right mx-1"></i>
+                            <span class="entity-badge entity-{{ r.obj.entity_type }}">{{ r.obj.text }}</span>
+                        </div>
+                        <p class="small text-muted mt-1 mb-0">"{{ r.evidence|truncatewords:25 }}"</p>
+                    </div>
+                {% empty %}
+                    <p class="text-muted small">No relations yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function runExtraction(id) {
+    if (!confirm('Re-run extraction? This will replace existing entities.')) return;
+    showToast('Running extraction…', 'info');
+    try {
+        const r = await fetchJSON(`/api/extraction/api/run/${id}/`, { method: 'POST' });
+        showToast(`Done: ${r.entities} entities, ${r.relations} relations in ${r.duration_seconds}s`, 'success');
+        setTimeout(() => location.reload(), 1500);
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+</script>
+{% endblock %}

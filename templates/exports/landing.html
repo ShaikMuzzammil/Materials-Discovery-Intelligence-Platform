@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Exports – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold"><i class="bi bi-download"></i> Export Reports</h3>
+    <p class="text-muted">Generate and download comprehensive reports for any of the 7 material domains.</p>
+</div>
+
+<div class="row g-3">
+    {% for d in datasets %}
+        <div class="col-md-6">
+            <div class="card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ d.name }}</h6>
+                        <p class="small text-muted mb-0">{{ d.description|default:"" }}</p>
+                    </div>
+                    <span class="badge text-bg-light text-secondary border">{{ d.n_samples }} rows</span>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <a href="/exports/api/{{ d.domain }}/csv/" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-filetype-csv"></i> CSV
+                    </a>
+                    <a href="/exports/api/{{ d.domain }}/json/" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-filetype-json"></i> JSON
+                    </a>
+                    <a href="/exports/api/{{ d.domain }}/markdown/" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-filetype-md"></i> Markdown
+                    </a>
+                    <a href="/exports/api/{{ d.domain }}/pdf/" class="btn btn-sm btn-outline-danger">
+                        <i class="bi bi-filetype-pdf"></i> PDF
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="card p-4 mt-4">
+    <h6 class="fw-bold mb-3"><i class="bi bi-file-text"></i> Full comparison report</h6>
+    <p class="text-muted">Generate a single report comparing all 7 domains.</p>
+    <a href="/exports/api/comparison/markdown/" class="btn btn-primary">
+        <i class="bi bi-download"></i> Download comparison (Markdown)
+    </a>
+</div>
+{% endblock %}

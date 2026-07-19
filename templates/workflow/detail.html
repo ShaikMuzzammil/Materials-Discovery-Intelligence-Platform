@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}{{ workflow.name }} – Workflow{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'workflow-landing' %}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left"></i> All workflows
+    </a>
+</div>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h3 class="fw-bold">{{ workflow.name }}</h3>
+            <p class="text-muted">{{ workflow.description }}</p>
+            <p class="small"><strong>Domain:</strong> {{ workflow.domain }}</p>
+        </div>
+        <button class="btn btn-primary" onclick="runWorkflow({{ workflow.id }})">
+            <i class="bi bi-play-circle"></i> Run workflow
+        </button>
+    </div>
+</div>
+
+<div class="card p-3 mb-4">
+    <h6 class="fw-bold mb-3">Pipeline steps ({{ workflow.steps|length }})</h6>
+    <div class="d-flex align-items-center flex-wrap">
+        {% for step in workflow.steps %}
+            <div class="text-center me-3 mb-2" style="min-width: 120px;">
+                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto" style="width: 40px; height: 40px;">
+                    <i class="bi bi-{{ forloop.counter }}"></i>
+                </div>
+                <div class="small fw-semibold mt-1">{{ step.name }}</div>
+                <div class="small text-muted">{{ step.type }}</div>
+            </div>
+            {% if not forloop.last %}<i class="bi bi-arrow-right text-muted me-3"></i>{% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card p-3">
+    <h6 class="fw-bold mb-3">Recent runs</h6>
+    {% if runs %}
+        <table class="table table-sm">
+            <thead class="table-light">
+                <tr><th>ID</th><th>Status</th><th>Current step</th><th>Duration</th><th>Started</th><th>Finished</th></tr>
+            </thead>
+            <tbody>
+                {% for r in runs %}
+                    <tr>
+                        <td>{{ r.id }}</td>
+                        <td><span class="badge text-bg-{% if r.status == 'completed' %}success{% elif r.status == 'running' %}info{% elif r.status == 'failed' %}danger{% else %}secondary{% endif %}">{{ r.status }}</span></td>
+                        <td>{{ r.current_step }} / {{ workflow.steps|length }}</td>
+                        <td>{{ r.duration_seconds|floatformat:1 }}s</td>
+                        <td class="small">{{ r.started_at|timesince }} ago</td>
+                        <td class="small">{{ r.finished_at|timesince }} ago</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="text-muted small">No runs yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function runWorkflow(id) {
+    if (!confirm('Run this workflow? It may take several minutes.')) return;
+    showToast('Running workflow...', 'info');
+    try {
+        const r = await fetchJSON(`/api/workflow/api/${id}/run/`, { method: 'POST' });
+        showToast(`Run #${r.run_id} ${r.status}`, 'success');
+        setTimeout(() => location.reload(), 2000);
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+</script>
+{% endblock %}

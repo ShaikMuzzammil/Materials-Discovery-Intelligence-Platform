@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ material.formula_pretty|default:material.formula }} – Materials{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'material-list' %}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left"></i> Back to materials
+    </a>
+</div>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <span class="badge text-bg-light text-secondary border">{{ material.source }}</span>
+            {% if material.source_id %}<code class="ms-2">{{ material.source_id }}</code>{% endif %}
+            <h3 class="fw-bold mt-2">{{ material.formula_pretty|default:material.formula }}</h3>
+            <p class="text-muted small mb-0">Cached at {{ material.cached_at|date:"Y-m-d H:i" }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold mb-3">Properties</h6>
+            <table class="table table-sm">
+                <tr><th>Band gap</th><td>{{ material.band_gap|default:"—" }} eV</td></tr>
+                <tr><th>Density</th><td>{{ material.density|default:"—" }} g/cm³</td></tr>
+                <tr><th>Formation energy / atom</th><td>{{ material.formation_energy_per_atom|default:"—" }} eV</td></tr>
+                <tr><th>Bulk modulus</th><td>{{ material.bulk_modulus|default:"—" }} GPa</td></tr>
+                <tr><th>Shear modulus</th><td>{{ material.shear_modulus|default:"—" }} GPa</td></tr>
+                <tr><th>Theoretical capacity</th><td>{{ material.theoretical_capacity|default:"—" }} mAh/g</td></tr>
+                <tr><th>Average voltage</th><td>{{ material.average_voltage|default:"—" }} V</td></tr>
+                <tr><th>Energy density</th><td>{{ material.energy_density|default:"—" }} Wh/kg</td></tr>
+                <tr><th>Stable</th><td>{{ material.is_stable|yesno:"yes,no" }}</td></tr>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold mb-3">Elements</h6>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                {% for el in material.elements %}
+                    <span class="badge text-bg-primary fs-6">{{ el }}</span>
+                {% empty %}
+                    <span class="text-muted small">No element list.</span>
+                {% endfor %}
+            </div>
+            {% if material.notes %}
+                <h6 class="fw-bold mt-3">Notes</h6>
+                <p class="small">{{ material.notes }}</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

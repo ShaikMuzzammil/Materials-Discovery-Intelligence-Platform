@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}{{ paper.title|truncatewords:10 }} – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'paper-list' %}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left"></i> Back to papers
+    </a>
+</div>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start mb-2">
+        <div class="d-flex gap-2">
+            <span class="badge text-bg-primary">{{ paper.source|upper }}</span>
+            <span class="badge text-bg-{% if paper.status == 'extracted' %}success{% elif paper.status == 'pending' %}secondary{% elif paper.status == 'failed' %}danger{% else %}info{% endif %}">
+                {{ paper.status }}
+            </span>
+            {% if paper.doi %}<span class="badge text-bg-light text-secondary border">DOI: {{ paper.doi }}</span>{% endif %}
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">Actions</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="{% url 'extraction-paper-detail' paper.id %}">View extraction →</a></li>
+                <li><button class="dropdown-item" onclick="extractPaper({{ paper.id }})">Run extraction</button></li>
+                <li><button class="dropdown-item" onclick="indexPaper({{ paper.id }})">Vector-index</button></li>
+            </ul>
+        </div>
+    </div>
+    <h3 class="fw-bold">{{ paper.title }}</h3>
+    <p class="text-muted mb-2">
+        {% if paper.published_at %}{{ paper.published_at|date:"F j, Y" }} · {% endif %}
+        {{ paper.authors|default:"(authors not listed)" }}
+    </p>
+    <div class="mb-3">
+        {% for d in paper.domains %}
+            <span class="badge text-bg-light text-secondary border me-1">{{ d }}</span>
+        {% endfor %}
+        {% for k in paper.keywords %}
+            <span class="badge text-bg-light text-muted me-1">#{{ k }}</span>
+        {% endfor %}
+    </div>
+    <h6 class="fw-bold text-uppercase text-muted small">Abstract</h6>
+    <p>{{ paper.abstract }}</p>
+    {% if paper.pdf_url %}
+        <a href="{{ paper.pdf_url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-file-earmark-pdf"></i> View PDF
+        </a>
+    {% endif %}
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold"><i class="bi bi-list-task"></i> Chunks ({{ chunks|length }})</h6>
+            <div style="max-height: 500px; overflow-y: auto;">
+                {% for c in chunks %}
+                    <div class="border rounded p-2 mb-2 small">
+                        <span class="badge text-bg-light text-secondary">#{{ c.chunk_index }}</span>
+                        <span class="badge text-bg-light text-secondary">{{ c.section|default:"body" }}</span>
+                        <span class="badge text-bg-light text-muted">{{ c.token_count }} tok</span>
+                        <p class="mt-1 mb-0">{{ c.text|truncatewords:40 }}</p>
+                    </div>
+                {% empty %}
+                    <p class="text-muted small">No chunks. Run extraction first.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold"><i class="bi bi-info-circle"></i> Metadata</h6>
+            <table class="table table-sm">
+                <tr><th>Source</th><td>{{ paper.source }}</td></tr>
+                <tr><th>Source ID</th><td><code>{{ paper.source_id|default:"—" }}</code></td></tr>
+                <tr><th>DOI</th><td><code>{{ paper.doi|default:"—" }}</code></td></tr>
+                <tr><th>Journal</th><td>{{ paper.journal|default:"—" }}</td></tr>
+                <tr><th>Published</th><td>{{ paper.published_at|default:"—" }}</td></tr>
+                <tr><th>Status</th><td>{{ paper.status }}</td></tr>
+                <tr><th>Ingested</th><td>{{ paper.created_at|date:"Y-m-d H:i" }}</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function extractPaper(id) {
+    showToast('Starting extraction…', 'info');
+    try {
+        const r = await fetchJSON(`/api/papers/api/${id}/extract/`, { method: 'POST' });
+        showToast(`Extraction queued (task: ${r.task_id})`, 'success');
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+async function indexPaper(id) {
+    showToast('Starting vector indexing…', 'info');
+    try {
+        const r = await fetchJSON(`/api/papers/api/${id}/index/`, { method: 'POST' });
+        showToast(`Indexing queued (task: ${r.task_id})`, 'success');
+    } catch (e) { showToast(e.message, 'danger'); }
+}
+</script>
+{% endblock %}

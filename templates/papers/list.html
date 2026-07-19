@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Papers – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-journal-text"></i> Research Papers</h3>
+        <p class="text-muted mb-0">Papers ingested from arXiv, OpenAlex, CrossRef, or manual upload.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#ingestModal">
+        <i class="bi bi-cloud-arrow-down"></i> Ingest from arXiv
+    </button>
+</div>
+
+<div class="card p-3 mb-4">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label small">Search title / abstract / authors</label>
+            <input type="text" name="q" class="form-control" placeholder="e.g. lithium iron phosphate" value="{{ request.GET.q }}">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label small">Source</label>
+            <select name="source" class="form-select">
+                <option value="">All</option>
+                <option value="arxiv">arXiv</option>
+                <option value="openalex">OpenAlex</option>
+                <option value="crossref">CrossRef</option>
+                <option value="manual">Manual</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Filter</button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3">
+    {% for paper in papers %}
+        <div class="col-md-6">
+            <div class="card h-100 p-3">
+                <div class="d-flex justify-content-between align-items-start">
+                    <span class="badge text-bg-primary">{{ paper.source|upper }}</span>
+                    <span class="badge text-bg-{% if paper.status == 'extracted' %}success{% elif paper.status == 'pending' %}secondary{% elif paper.status == 'failed' %}danger{% else %}info{% endif %}">
+                        {{ paper.status }}
+                    </span>
+                </div>
+                <h6 class="fw-bold mt-2 mb-1">
+                    <a href="{% url 'paper-detail' paper.id %}" class="text-decoration-none text-dark stretched-link">
+                        {{ paper.title|truncatewords:18 }}
+                    </a>
+                </h6>
+                <p class="small text-muted mb-2">
+                    {% if paper.published_at %}{{ paper.published_at|date:"Y-m-d" }} · {% endif %}
+                    {{ paper.authors|truncatewords:5|default:"(no authors)" }}
+                </p>
+                <p class="small mb-2">{{ paper.abstract|truncatewords:30 }}</p>
+                <div class="d-flex flex-wrap gap-1">
+                    {% for d in paper.domains|slice:":3" %}
+                        <span class="badge text-bg-light text-secondary border">{{ d }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="card p-5 text-center text-muted">
+                <i class="bi bi-inbox display-1"></i>
+                <h5 class="mt-3">No papers yet</h5>
+                <p>Run <code>python manage.py seed_data</code> to load sample papers, or use the Ingest button above.</p>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<!-- Ingest Modal -->
+<div class="modal fade" id="ingestModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="ingestForm">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-cloud-arrow-down"></i> Ingest from arXiv</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Search query</label>
+                        <input type="text" class="form-control" name="query_text" placeholder="lithium battery cathode" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Max results</label>
+                        <input type="number" class="form-control" name="max_results" value="10" min="1" max="50">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Source</label>
+                        <select class="form-select" name="query_type">
+                            <option value="arxiv_search">arXiv</option>
+                            <option value="openalex">OpenAlex</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <span id="ingestSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                        Start ingestion
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('ingestForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const data = Object.fromEntries(new FormData(form));
+    document.getElementById('ingestSpinner').classList.remove('d-none');
+    try {
+        const res = await fetchJSON('/api/papers/api/jobs/', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        });
+        showToast(`Ingestion job created: ${res.papers_added} papers added`, 'success');
+        setTimeout(() => location.reload(), 1500);
+    } catch (e) {
+        showToast(`Ingestion failed: ${e.message}`, 'danger');
+    } finally {
+        document.getElementById('ingestSpinner').classList.add('d-none');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Cross-Domain Insights – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold"><i class="bi bi-stars"></i> Cross-Domain Insights</h3>
+    <p class="text-muted">AI-discovered patterns across all 7 material domains.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-12">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Model comparison by (domain, target)</h6>
+            <div class="table-responsive">
+                <table class="table table-sm" id="comparisonTable">
+                    <thead class="table-light">
+                        <tr><th>Domain</th><th>Target</th><th>Best algorithm</th><th>Best R²</th><th>All algorithms</th></tr>
+                    </thead>
+                    <tbody id="comparisonBody">
+                        <tr><td colspan="5" class="text-center text-muted py-4">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadComparison() {
+    const r = await fetchJSON('/api/analytics/api/model-comparison/');
+    const comps = r.comparisons || [];
+    if (comps.length === 0) {
+        document.getElementById('comparisonBody').innerHTML = '<tr><td colspan="5" class="text-muted text-center py-4">No models trained yet.</td></tr>';
+        return;
+    }
+    document.getElementById('comparisonBody').innerHTML = comps.map(c => `
+        <tr>
+            <td><span class="badge text-bg-light text-secondary border">${c.domain}</span></td>
+            <td><code>${c.target}</code></td>
+            <td>${c.best_algorithm || '—'}</td>
+            <td><strong>${(c.best_r2 || 0).toFixed(3)}</strong></td>
+            <td>${c.models.map(m => `<span class="badge text-bg-${m.r2 > 0.7 ? 'success' : m.r2 > 0.4 ? 'warning' : 'danger'} me-1">${m.algorithm}: ${(m.r2 || 0).toFixed(2)}</span>`).join('')}</td>
+        </tr>
+    `).join('');
+}
+loadComparison();
+</script>
+{% endblock %}

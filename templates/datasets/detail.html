@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ info.name }} – Datasets{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'datasets-landing' %}" class="text-decoration-none small">
+        <i class="bi bi-arrow-left"></i> All datasets
+    </a>
+</div>
+
+<div class="card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <h3 class="fw-bold">{{ info.name }}</h3>
+            <p class="text-muted mb-2">{{ info.description }}</p>
+            <div class="d-flex gap-3">
+                <div><strong>{{ analysis.n_samples }}</strong> samples</div>
+                <div><strong>{{ analysis.n_columns }}</strong> columns</div>
+                <div><strong>{{ info.targets|length }}</strong> targets</div>
+                <div><strong>{{ quality.score }}/100</strong> quality ({{ quality.grade }})</div>
+            </div>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-download"></i> Export</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" href="/exports/api/{{ domain }}/csv/"><i class="bi bi-filetype-csv"></i> CSV</a></li>
+                <li><a class="dropdown-item" href="/exports/api/{{ domain }}/json/"><i class="bi bi-filetype-json"></i> JSON</a></li>
+                <li><a class="dropdown-item" href="/exports/api/{{ domain }}/markdown/"><i class="bi bi-filetype-md"></i> Markdown</a></li>
+                <li><a class="dropdown-item" href="/exports/api/{{ domain }}/pdf/"><i class="bi bi-filetype-pdf"></i> PDF</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold mb-3">Numeric column statistics</h6>
+            <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                <table class="table table-sm">
+                    <thead class="table-light">
+                        <tr><th>Column</th><th>Mean</th><th>Std</th><th>Min</th><th>Max</th><th>Skew</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for col, s in analysis.statistics.items %}
+                            <tr>
+                                <td><code>{{ col }}</code></td>
+                                <td>{{ s.mean|floatformat:2 }}</td>
+                                <td>{{ s.std|floatformat:2 }}</td>
+                                <td>{{ s.min|floatformat:2 }}</td>
+                                <td>{{ s.max|floatformat:2 }}</td>
+                                <td>{{ s.skew|floatformat:2 }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold mb-3">Categorical distributions</h6>
+            <div style="max-height: 400px; overflow-y: auto;">
+                {% for col, dist in analysis.categorical_distributions.items %}
+                    <div class="border-bottom py-2">
+                        <strong>{{ col }}</strong> ({{ dist.unique_count }} unique)
+                        <ul class="small mt-1 mb-0">
+                            {% for val, count in dist.top_values %}
+                                <li><code>{{ val }}</code>: {{ count }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Target distributions</h6>
+            <div id="distCharts" style="height: 400px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const targetDistributions = {{ analysis.target_distributions|safe|default:"{}" }};
+// Django will serialize the dict; need to convert it via fetch for safety
+async function loadDistributions() {
+    const r = await fetchJSON(`/api/datasets/api/{{ domain }}/stats/`);
+    const dists = r.target_distributions || {};
+    const targets = Object.keys(dists);
+    if (targets.length === 0) return;
+    const traces = [];
+    targets.slice(0, 6).forEach((t, i) => {
+        const d = dists[t];
+        traces.push({
+            type: 'bar', name: t,
+            x: d.bins.slice(0, -1).map((b, i) => b.toFixed(1)),
+            y: d.counts,
+            visible: i === 0 ? true : 'legendonly',
+        });
+    });
+    Plotly.newPlot('distCharts', traces, { ...PLOTLY_LAYOUT, barmode: 'group', legend: { orientation: 'h', y: -0.2 } }, PLOTLY_CONFIG);
+}
+loadDistributions();
+</script>
+{% endblock %}

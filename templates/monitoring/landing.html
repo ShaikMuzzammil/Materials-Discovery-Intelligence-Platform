@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Monitoring – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold"><i class="bi bi-activity"></i> System Monitoring</h3>
+    <p class="text-muted">Real-time overview of system activity, model performance, and prediction drift.</p>
+</div>
+
+<div class="row g-3 mb-4" id="stats-row">
+    <!-- Populated by JS -->
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Model performance (R² over time)</h6>
+            <div id="modelPerfChart" style="height: 300px;"></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Prediction drift detection</h6>
+            <div id="driftInfo" class="text-center py-4">
+                <span class="spinner-border spinner-border-sm"></span> Loading...
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Usage over time (last 30 days)</h6>
+            <div id="usageChart" style="height: 350px;"></div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadOverview() {
+    const r = await fetchJSON('/api/monitoring/api/overview/');
+    const c = r.counts;
+    const ra = r.recent_activity;
+    document.getElementById('stats-row').innerHTML = `
+        <div class="col-6 col-md-3"><div class="card stat-card p-3">
+            <div class="stat-value">${c.papers}</div><div class="stat-label">Papers</div>
+        </div></div>
+        <div class="col-6 col-md-3"><div class="card stat-card p-3" style="border-left-color: var(--mda-accent);">
+            <div class="stat-value" style="color: var(--mda-accent);">${c.entities}</div><div class="stat-label">Entities</div>
+        </div></div>
+        <div class="col-6 col-md-3"><div class="card stat-card p-3" style="border-left-color: var(--mda-success);">
+            <div class="stat-value" style="color: var(--mda-success);">${c.predictions}</div><div class="stat-label">Predictions</div>
+        </div></div>
+        <div class="col-6 col-md-3"><div class="card stat-card p-3" style="border-left-color: #f59e0b;">
+            <div class="stat-value" style="color: #f59e0b;">${c.training_runs}</div><div class="stat-label">Training runs</div>
+        </div></div>
+    `;
+}
+
+async function loadModelPerf() {
+    const r = await fetchJSON('/api/monitoring/api/models/');
+    const runs = r.runs || [];
+    if (runs.length === 0) {
+        document.getElementById('modelPerfChart').innerHTML = '<p class="text-muted small text-center py-5">No training runs yet.</p>';
+        return;
+    }
+    const traces = {};
+    runs.forEach(run => {
+        const key = `${run.domain}/${run.target}`;
+        if (!traces[key]) traces[key] = { x: [], y: [], name: key, type: 'scatter', mode: 'lines+markers' };
+        traces[key].x.push(run.created_at);
+        traces[key].y.push(run.r2);
+    });
+    Plotly.newPlot('modelPerfChart', Object.values(traces), {
+        ...PLOTLY_LAYOUT,
+        xaxis: { title: 'Time' },
+        yaxis: { title: 'R²', range: [0, 1] },
+        legend: { orientation: 'h', y: -0.3 },
+    }, PLOTLY_CONFIG);
+}
+
+async function loadDrift() {
+    const r = await fetchJSON('/api/monitoring/api/drift/');
+    const el = document.getElementById('driftInfo');
+    if (r.status === 'insufficient_data') {
+        el.innerHTML = `<p class="text-muted small">Insufficient data for drift detection.<br>Recent: ${r.recent_count}, Historical: ${r.historical_count}</p>`;
+        return;
+    }
+    const color = r.status === 'drift_detected' ? '#ef4444' : '#10b981';
+    el.innerHTML = `
+        <div class="display-6 fw-bold" style="color: ${color}">${r.drift_score}</div>
+        <div class="small text-muted">Drift score</div>
+        <p class="mt-3"><span class="badge text-bg-${r.status === 'drift_detected' ? 'danger' : 'success'}">${r.status}</span></p>
+        <div class="small">
+            Recent mean: <strong>${r.recent_mean}</strong> (n=${r.recent_count})<br>
+            Historical mean: <strong>${r.historical_mean}</strong> (n=${r.historical_count})
+        </div>
+    `;
+}
+
+async function loadUsage() {
+    const r = await fetchJSON('/api/monitoring/api/usage/?days=30');
+    const days = Object.keys(r.daily_papers || {}).sort();
+    if (days.length === 0) {
+        document.getElementById('usageChart').innerHTML = '<p class="text-muted small text-center py-5">No usage data yet.</p>';
+        return;
+    }
+    const traces = [
+        { name: 'Papers', type: 'scatter', mode: 'lines+markers', x: days, y: days.map(d => r.daily_papers[d] || 0), marker: { color: '#0d6efd' } },
+        { name: 'Predictions', type: 'scatter', mode: 'lines+markers', x: days, y: days.map(d => r.daily_predictions[d] || 0), marker: { color: '#6f42c1' } },
+        { name: 'Chat messages', type: 'scatter', mode: 'lines+markers', x: days, y: days.map(d => r.daily_chats[d] || 0), marker: { color: '#198754' } },
+    ];
+    Plotly.newPlot('usageChart', traces, {
+        ...PLOTLY_LAYOUT,
+        xaxis: { title: 'Date' },
+        yaxis: { title: 'Count' },
+        legend: { orientation: 'h', y: -0.2 },
+    }, PLOTLY_CONFIG);
+}
+
+loadOverview();
+loadModelPerf();
+loadDrift();
+loadUsage();
+</script>
+{% endblock %}

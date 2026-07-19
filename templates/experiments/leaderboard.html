@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold"><i class="bi bi-trophy"></i> Model Leaderboard</h3>
+    <p class="text-muted">Best models per (domain, target) combination, ranked by R².</p>
+</div>
+
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr><th>#</th><th>Domain</th><th>Target</th><th>Algorithm</th><th>R²</th><th>RMSE</th><th>MAE</th><th>Duration</th></tr>
+            </thead>
+            <tbody id="leaderboardBody">
+                <tr><td colspan="8" class="text-center text-muted py-4">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function loadLeaderboard() {
+    const r = await fetchJSON('/api/experiments/api/leaderboard/');
+    const lb = r.leaderboard || [];
+    lb.sort((a, b) => b.r2 - a.r2);
+    if (lb.length === 0) {
+        document.getElementById('leaderboardBody').innerHTML = '<tr><td colspan="8" class="text-muted text-center py-4">No completed runs yet. Train a model to populate the leaderboard.</td></tr>';
+        return;
+    }
+    document.getElementById('leaderboardBody').innerHTML = lb.map((m, i) => `
+        <tr>
+            <td><span class="badge ${i < 3 ? 'bg-warning' : 'bg-light text-dark'}">${i + 1}</span></td>
+            <td><span class="badge text-bg-light text-secondary border">${m.domain}</span></td>
+            <td><code>${m.target}</code></td>
+            <td>${m.algorithm}</td>
+            <td><strong>${(m.r2 || 0).toFixed(3)}</strong></td>
+            <td>${(m.rmse || 0).toFixed(2)}</td>
+            <td>${(m.mae || 0).toFixed(2)}</td>
+            <td>${(m.duration_seconds || 0).toFixed(1)}s</td>
+        </tr>
+    `).join('');
+}
+loadLeaderboard();
+</script>
+{% endblock %}

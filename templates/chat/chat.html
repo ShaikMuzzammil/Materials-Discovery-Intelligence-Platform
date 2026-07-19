@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}AI Chat – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold"><i class="bi bi-chat-dots"></i> AI Research Assistant</h3>
+    <p class="text-muted">RAG-powered Q&A over the materials knowledge base. Every answer cites its sources.</p>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card p-3" style="height: 600px; display: flex; flex-direction: column;">
+            <div id="chatMessages" class="flex-grow-1 overflow-auto mb-3" style="min-height: 400px;">
+                <div class="chat-bubble assistant">
+                    <strong>MatDiscoverAI:</strong> Hello! I'm your materials-science research assistant.
+                    Ask me anything about the indexed papers, materials, synthesis methods, or properties.
+                    Try:
+                    <ul class="mb-0 mt-1 small">
+                        <li>"What is the capacity of LiFePO4?"</li>
+                        <li>"Which materials are synthesized by sol-gel?"</li>
+                        <li>"What are the best cathodes for high energy density?"</li>
+                    </ul>
+                </div>
+            </div>
+            <form id="chatForm" class="d-flex gap-2">
+                <input type="text" id="chatInput" class="form-control" placeholder="Ask about materials, properties, synthesis…" autocomplete="off">
+                <button type="submit" class="btn btn-primary" id="chatSubmit">
+                    <span id="chatSpinner" class="spinner-border spinner-border-sm d-none"></span>
+                    <i class="bi bi-send"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card p-3 mb-3">
+            <h6 class="fw-bold mb-2"><i class="bi bi-gear"></i> Settings</h6>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="useRag" checked>
+                <label class="form-check-label small" for="useRag">Use RAG (cite sources)</label>
+            </div>
+            <div class="mt-2">
+                <label class="form-label small">Top-K chunks</label>
+                <input type="range" class="form-range" id="topK" min="1" max="20" value="5">
+                <span class="small text-muted">K = <span id="topKValue">5</span></span>
+            </div>
+        </div>
+        <div class="card p-3">
+            <h6 class="fw-bold mb-2"><i class="bi bi-lightbulb"></i> Suggested questions</h6>
+            <div class="d-grid gap-1">
+                <button class="btn btn-outline-secondary btn-sm text-start suggest" data-q="What is the specific capacity of LiFePO4?">What is the specific capacity of LiFePO4?</button>
+                <button class="btn btn-outline-secondary btn-sm text-start suggest" data-q="Which cathode materials use sol-gel synthesis?">Which cathode materials use sol-gel synthesis?</button>
+                <button class="btn btn-outline-secondary btn-sm text-start suggest" data-q="Compare NCM811 and LiFePO4 for cycle life.">Compare NCM811 and LiFePO4 for cycle life.</button>
+                <button class="btn btn-outline-secondary btn-sm text-start suggest" data-q="What are the latest Li-rich cathode materials?">What are the latest Li-rich cathode materials?</button>
+                <button class="btn btn-outline-secondary btn-sm text-start suggest" data-q="How does Ta doping affect LLZO conductivity?">How does Ta doping affect LLZO conductivity?</button>
+                <button class="btn btn-outline-secondary btn-sm text-start suggest" data-q="Which anodes have capacity above 1000 mAh/g?">Which anodes have capacity above 1000 mAh/g?</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="sessionKey" value="{{ session_key }}">
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const sessionKey = document.getElementById('sessionKey').value;
+const messagesEl = document.getElementById('chatMessages');
+
+document.getElementById('topK').addEventListener('input', (e) => {
+    document.getElementById('topKValue').textContent = e.target.value;
+});
+
+document.querySelectorAll('.suggest').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('chatInput').value = btn.dataset.q;
+        document.getElementById('chatForm').dispatchEvent(new Event('submit'));
+    });
+});
+
+function appendMessage(role, content) {
+    const div = document.createElement('div');
+    div.className = `chat-bubble ${role}`;
+    div.innerHTML = content;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+document.getElementById('chatForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('chatInput');
+    const question = input.value.trim();
+    if (!question) return;
+    appendMessage('user', `<strong>You:</strong> ${question}`);
+    input.value = '';
+    document.getElementById('chatSpinner').classList.remove('d-none');
+    document.getElementById('chatSubmit').disabled = true;
+
+    const useRag = document.getElementById('useRag').checked;
+    const topK = parseInt(document.getElementById('topK').value);
+
+    try {
+        const r = await fetchJSON('/api/chat/api/ask/', {
+            method: 'POST',
+            body: JSON.stringify({
+                question, session_key: sessionKey,
+                use_rag: useRag, top_k: topK,
+            }),
+        });
+        let html = `<strong>MatDiscoverAI:</strong> ${r.answer}`;
+        if (r.sources && r.sources.length) {
+            html += `<div class="mt-2 small"><em>Sources:</em><ul class="mb-0">`;
+            r.sources.forEach((s, i) => {
+                html += `<li>[${i+1}] <em>${s.title?.substring(0, 60) || ''}</em> (${s.section || 'body'}) – "${s.snippet?.substring(0, 100) || ''}…"</li>`;
+            });
+            html += `</ul></div>`;
+        }
+        appendMessage('assistant', html);
+    } catch (err) {
+        appendMessage('assistant', `<strong>Error:</strong> ${err.message}`);
+    } finally {
+        document.getElementById('chatSpinner').classList.add('d-none');
+        document.getElementById('chatSubmit').disabled = false;
+    }
+});
+</script>
+{% endblock %}

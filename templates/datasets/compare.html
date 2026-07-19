@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Compare Datasets – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold"><i class="bi bi-bar-chart"></i> Compare Datasets</h3>
+    <p class="text-muted">Side-by-side comparison of all 7 material datasets.</p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Sample counts</h6>
+            <div id="sampleChart" style="height: 320px;"></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h6 class="fw-bold mb-3">Quality scores</h6>
+            <div id="qualityChart" style="height: 320px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-3">
+    <h6 class="fw-bold mb-3">Comparison table</h6>
+    <table class="table table-sm table-hover">
+        <thead class="table-light">
+            <tr><th>Domain</th><th>Samples</th><th>Columns</th><th>Targets</th><th>Quality</th><th>Grade</th><th>Missing %</th></tr>
+        </thead>
+        <tbody>
+            {% for d in comparison %}
+                <tr>
+                    <td><a href="{% url 'dataset-detail' d.domain %}" class="text-decoration-none fw-semibold">{{ d.name }}</a></td>
+                    <td>{{ d.n_samples }}</td>
+                    <td>{{ d.n_columns }}</td>
+                    <td>{{ d.n_targets }}</td>
+                    <td>{{ d.score }}/100</td>
+                    <td><span class="badge text-bg-{% if d.grade|slice:':1' == 'A' %}success{% elif d.grade|slice:':1' == 'B' %}primary{% elif d.grade|slice:':1' == 'C' %}warning{% else %}danger{% endif %}">{{ d.grade }}</span></td>
+                    <td>{{ d.missing_pct }}%</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const data = [
+    {% for d in comparison %}
+    {name: "{{ d.name }}", n_samples: {{ d.n_samples }}, score: {{ d.score }}, grade: "{{ d.grade }}"},
+    {% endfor %}
+];
+
+Plotly.newPlot('sampleChart', [{
+    type: 'bar',
+    x: data.map(d => d.name),
+    y: data.map(d => d.n_samples),
+    marker: { color: '#0d6efd' },
+    text: data.map(d => d.n_samples.toString()),
+    textposition: 'outside',
+}], PLOTLY_LAYOUT, PLOTLY_CONFIG);
+
+Plotly.newPlot('qualityChart', [{
+    type: 'bar',
+    x: data.map(d => d.name),
+    y: data.map(d => d.score),
+    marker: { color: data.map(d => d.grade.startsWith('A') ? '#10b981' : d.grade.startsWith('B') ? '#3b82f6' : d.grade.startsWith('C') ? '#f59e0b' : '#ef4444') },
+    text: data.map(d => `${d.score} (${d.grade})`),
+    textposition: 'outside',
+}], { ...PLOTLY_LAYOUT, yaxis: { range: [0, 100] } }, PLOTLY_CONFIG);
+</script>
+{% endblock %}

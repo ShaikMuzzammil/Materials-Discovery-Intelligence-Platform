@@ -1,0 +1,87 @@
+formula,catalyst_type,support_material,overpotential_mv,tafel_slope_mv_dec,exchange_current_density_ma_cm2,faradaic_efficiency_pct,stability_hours,turnover_frequency_s1
+Pt/C,metal,Vulcan XC-72,30,30,0.45,95,50000,10
+Pt/C,metal,Ketjenblack,25,28,0.5,96,60000,12
+Pt3Ni/C,alloy,Vulcan XC-72,20,25,0.65,97,40000,15
+Pt3Co/C,alloy,Vulcan XC-72,22,27,0.6,96,38000,14
+Pt3Fe/C,alloy,Vulcan XC-72,28,32,0.55,95,35000,12
+PtCu/C,alloy,Vulcan XC-72,35,35,0.45,94,30000,10
+PtPb/C,intermetallic,Vulcan XC-72,25,28,0.6,96,32000,13
+PtSn/C,intermetallic,Vulcan XC-72,40,40,0.4,93,28000,9
+Pd/C,metal,Vulcan XC-72,80,70,0.3,92,25000,7
+PdAu/C,alloy,Vulcan XC-72,70,60,0.35,93,22000,8
+PdPt/C,alloy,Vulcan XC-72,50,50,0.4,94,30000,10
+IrO2,oxide,Ti,280,40,0.05,98,2000,1
+IrO2,oxide,Glassy carbon,270,38,0.06,98,2200,1.2
+RuO2,oxide,Ti,290,45,0.04,97,1800,0.8
+RuO2,oxide,Glassy carbon,280,42,0.05,97,2000,1
+IrRuO2,mixed-oxide,Ti,270,40,0.06,98,2500,1.5
+NiFeOOH,oxyhydroxide,Ni foam,240,35,0.08,99,1000,0.5
+NiFeOOH,oxyhydroxide,Glassy carbon,230,32,0.1,99,1200,0.6
+NiFe-LDH,layered,Glassy carbon,260,45,0.05,98,800,0.3
+NiFe-LDH,layered,Ni foam,220,38,0.08,99,1500,0.5
+CoPi,phosphate,Glassy carbon,410,60,0.02,95,500,0.1
+CoPi,phosphate,FTO,400,55,0.03,96,600,0.15
+CoFe-LDH,layered,Glassy carbon,280,50,0.04,97,700,0.2
+CoFe-LDH,layered,Ni foam,250,42,0.06,98,1000,0.3
+Ni2P,phosphide,Carbon paper,130,50,0.1,95,100,0.4
+Ni2P,phosphide,Glassy carbon,140,55,0.08,94,80,0.3
+CoP,phosphide,Carbon paper,120,50,0.12,96,90,0.5
+CoP,phosphide,Glassy carbon,130,55,0.1,95,70,0.4
+FeP,phosphide,Carbon paper,110,45,0.15,97,80,0.6
+MoP,phosphide,Carbon paper,150,60,0.08,93,60,0.3
+WP,phosphide,Carbon paper,140,55,0.1,94,70,0.4
+Ni3S2,sulfide,Ni foam,110,50,0.2,96,200,0.8
+Ni3S2,sulfide,Glassy carbon,130,55,0.15,95,150,0.6
+MoS2,sulfide,Glassy carbon,180,60,0.05,92,100,0.2
+MoS2-edge,sulfide,Carbon nanotube,150,50,0.08,94,150,0.3
+MoS2-1L,sulfide,Au,120,45,0.1,95,200,0.4
+WS2,sulfide,Glassy carbon,200,65,0.04,91,80,0.15
+WS2-1L,sulfide,Au,140,50,0.08,94,150,0.3
+CoS2,sulfide,Glassy carbon,160,55,0.06,93,120,0.25
+NiS2,sulfide,Glassy carbon,180,60,0.05,92,100,0.2
+FeS2,sulfide,Glassy carbon,200,65,0.04,91,90,0.15
+Co9S8,sulfide,Carbon paper,150,55,0.07,94,130,0.3
+NiSe2,selenide,Glassy carbon,140,50,0.08,95,140,0.35
+CoSe2,selenide,Glassy carbon,150,55,0.07,94,120,0.3
+MoSe2,selenide,Glassy carbon,170,60,0.05,93,100,0.2
+WSe2,selenide,Glassy carbon,180,62,0.04,92,90,0.18
+NiMo,alloy,Ni foam,90,60,0.25,97,300,1
+NiMo,alloy,Glassy carbon,100,65,0.2,96,250,0.8
+CoMo,alloy,Glassy carbon,110,70,0.15,95,200,0.6
+NiW,alloy,Glassy carbon,120,75,0.12,94,180,0.5
+CoW,alloy,Glassy carbon,130,78,0.1,93,160,0.4
+Au,metal,Glassy carbon,250,100,0.01,90,500,0.05
+Ag,metal,Glassy carbon,320,120,0.005,88,300,0.02
+Cu,metal,Glassy carbon,450,150,0.002,85,200,0.01
+Cu2O,oxide,Glassy carbon,400,130,0.005,87,250,0.03
+CuO,oxide,Glassy carbon,420,140,0.004,86,220,0.025
+NiO,oxide,Glassy carbon,350,120,0.01,88,300,0.05
+Co3O4,oxide,Glassy carbon,320,110,0.015,89,350,0.08
+Fe2O3,oxide,FTO,400,130,0.005,87,250,0.03
+Fe3O4,oxide,Glassy carbon,380,125,0.008,88,280,0.04
+MnO2,oxide,Glassy carbon,380,130,0.005,87,200,0.025
+Mn2O3,oxide,Glassy carbon,400,135,0.004,86,180,0.02
+CoFe2O4,spinel,Glassy carbon,350,115,0.01,89,300,0.06
+NiFe2O4,spinel,Glassy carbon,360,120,0.008,88,280,0.05
+ZnFe2O4,spinel,Glassy carbon,400,130,0.005,86,200,0.025
+MnFe2O4,spinel,Glassy carbon,380,125,0.006,87,220,0.03
+Co3O4-Fe2O3,composite,Glassy carbon,300,100,0.02,91,400,0.1
+NiO-Fe2O3,composite,Glassy carbon,320,110,0.015,90,350,0.08
+Pt-Co3O4,composite,Glassy carbon,60,45,0.3,96,25000,8
+Pt-NiO,composite,Glassy carbon,70,50,0.25,95,20000,6
+Au-Fe2O3,composite,FTO,300,90,0.02,92,800,0.15
+Ag-Cu2O,composite,Glassy carbon,320,100,0.015,91,600,0.1
+Cu3N,nitride,Glassy carbon,280,90,0.025,93,500,0.2
+CoN,nitride,Glassy carbon,200,70,0.04,94,400,0.3
+Ni3N,nitride,Glassy carbon,180,65,0.05,95,500,0.35
+MoN,nitride,Glassy carbon,220,75,0.03,93,300,0.25
+WN,nitride,Glassy carbon,230,78,0.025,92,280,0.2
+FeN4-graphene,single-atom,Graphene,80,60,0.2,95,1000,1.5
+CoN4-graphene,single-atom,Graphene,70,55,0.25,96,1500,2
+NiN4-graphene,single-atom,Graphene,90,65,0.15,94,800,1
+CuN4-graphene,single-atom,Graphene,110,75,0.1,92,600,0.7
+MnN4-graphene,single-atom,Graphene,100,70,0.12,93,700,0.8
+FeN4-CNT,single-atom,Carbon nanotube,75,58,0.22,95,1200,1.8
+CoN4-CNT,single-atom,Carbon nanotube,65,52,0.28,96,1800,2.2
+NiFe-NC,single-atom,N-doped carbon,130,75,0.1,93,800,0.7
+CoFe-NC,single-atom,N-doped carbon,120,70,0.12,94,900,0.8

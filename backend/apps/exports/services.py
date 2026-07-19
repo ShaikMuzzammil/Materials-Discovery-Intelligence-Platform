@@ -1,0 +1,283 @@
+"""Export services – generate PDF, CSV, JSON, and Markdown reports."""
+from __future__ import annotations
+import io
+import json
+import csv
+import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+from django.http import HttpResponse, JsonResponse
+
+from ml.datasets.loaders import list_all_datasets, get_domain_info, load_domain_dataset
+from ml.evaluation.analyzer import analyze_dataset, compare_datasets, get_dataset_quality_score
+from ml.models.universal_trainer import list_trained_models
+
+log = logging.getLogger(__name__)
+
+
+def export_dataset_csv(domain: str) -> HttpResponse:
+    """Export a domain's dataset as CSV."""
+    df = load_domain_dataset(domain)
+    if df.empty:
+        return HttpResponse("Dataset not found", status=404)
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{domain}_dataset.csv"'
+    df.to_csv(response, index=False)
+    return response
+
+
+def export_dataset_json(domain: str) -> HttpResponse:
+    """Export a domain's dataset + analysis as JSON."""
+    df = load_domain_dataset(domain)
+    if df.empty:
+        return HttpResponse("Dataset not found", status=404)
+    analysis = analyze_dataset(domain)
+    quality = get_dataset_quality_score(domain)
+    info = get_domain_info(domain)
+
+    payload = {
+        "domain": domain,
+        "info": info,
+        "quality": quality,
+        "analysis": analysis,
+        "samples": df.to_dict(orient="records"),
+        "exported_at": datetime.now().isoformat(),
+    }
+    response = HttpResponse(
+        json.dumps(payload, indent=2, default=str),
+        content_type="application/json"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{domain}_export.json"'
+    return response
+
+
+def export_dataset_markdown(domain: str) -> HttpResponse:
+    """Export a comprehensive Markdown report for a domain."""
+    info = get_domain_info(domain)
+    analysis = analyze_dataset(domain)
+    quality = get_dataset_quality_score(domain)
+
+    md = f"""# {info['name']} Dataset Report
+
+**Domain:** `{domain}`
+**Generated:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+## Overview
+
+- **Description:** {info['description']}
+- **Samples:** {analysis['n_samples']}
+- **Columns:** {analysis['n_columns']}
+- **Targets:** {len(info['targets'])}
+- **Quality Score:** {quality['score']}/100 ({quality['grade']})
+
+## Quality Issues
+
+"""
+    for issue in quality.get("issues", []):
+        if issue:
+            md += f"- {issue}\n"
+
+    md += f"""
+
+## Columns
+
+### Numeric columns
+{", ".join(f"`{c}`" for c in analysis['numeric_columns'])}
+
+### Categorical columns
+{", ".join(f"`{c}`" for c in analysis['categorical_columns'])}
+
+## Statistics
+
+| Column | Mean | Std | Min | Max | Median |
+|--------|------|-----|-----|-----|--------|
+"""
+    for col, s in analysis.get("statistics", {}).items():
+        md += f"| `{col}` | {s['mean']:.2f} | {s['std']:.2f} | {s['min']:.2f} | {s['max']:.2f} | {s['median']:.2f} |\n"
+
+    md += f"""
+
+## Target Distributions
+
+"""
+    for target, dist in analysis.get("target_distributions", {}).items():
+        md += f"### {target}\n"
+        md += f"- Mean: {dist['mean']:.2f}\n"
+        md += f"- Median: {dist['median']:.2f}\n"
+        md += f"- Std: {dist['std']:.2f}\n"
+        md += f"- Bins: {dist['bins']}\n"
+        md += f"- Counts: {dist['counts']}\n\n"
+
+    md += f"""
+
+## Correlations (top 10)
+
+| Feature pair | Correlation |
+|--------------|-------------|
+"""
+    for pair, corr in list(analysis.get("correlations", {}).items())[:10]:
+        c1, c2 = pair.split("__")
+        md += f"| `{c1}` ↔ `{c2}` | {corr:+.4f} |\n"
+
+    md += f"""
+
+## Outliers (IQR method)
+
+"""
+    if analysis.get("outliers"):
+        for col, o in analysis["outliers"].items():
+            md += f"- **{col}:** {o['count']} outliers ({o['percent']}%), bounds [{o['bounds'][0]:.2f}, {o['bounds'][1]:.2f}]\n"
+    else:
+        md += "No significant outliers detected.\n"
+
+    md += f"""
+
+## Trained Models
+
+"""
+    models = [m for m in list_trained_models() if m["domain"] == domain]
+    if models:
+        md += "| Target | Algorithm | R² | RMSE | MAE |\n"
+        md += "|--------|-----------|----|------|-----|\n"
+        for m in models:
+            r2 = m.get("metrics", {}).get("r2", "N/A")
+            rmse = m.get("metrics", {}).get("rmse", "N/A")
+            mae = m.get("metrics", {}).get("mae", "N/A")
+            r2_str = f"{r2:.3f}" if isinstance(r2, (int, float)) else str(r2)
+            rmse_str = f"{rmse:.2f}" if isinstance(rmse, (int, float)) else str(rmse)
+            mae_str = f"{mae:.2f}" if isinstance(mae, (int, float)) else str(mae)
+            md += f"| {m['target']} | {m['algorithm']} | {r2_str} | {rmse_str} | {mae_str} |\n"
+    else:
+        md += "No trained models yet for this domain.\n"
+
+    md += f"""
+
+---
+
+*Report generated by MatDiscoverAI*
+"""
+    response = HttpResponse(md, content_type="text/markdown")
+    response["Content-Disposition"] = f'attachment; filename="{domain}_report.md"'
+    return response
+
+
+def export_dataset_pdf(domain: str) -> HttpResponse:
+    """Export a PDF report (uses reportlab if available, else falls back to Markdown)."""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import cm
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+        from reportlab.lib import colors
+    except ImportError:
+        # Fallback: return Markdown
+        return export_dataset_markdown(domain)
+
+    info = get_domain_info(domain)
+    analysis = analyze_dataset(domain)
+    quality = get_dataset_quality_score(domain)
+
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4,
+                            topMargin=2*cm, bottomMargin=2*cm,
+                            leftMargin=2*cm, rightMargin=2*cm)
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle("Title", parent=styles["Title"], fontSize=22, textColor=colors.HexColor("#1e3a8a"))
+    h2_style = ParagraphStyle("H2", parent=styles["Heading2"], fontSize=14, textColor=colors.HexColor("#6f42c1"))
+    body_style = ParagraphStyle("Body", parent=styles["BodyText"], fontSize=10, leading=14)
+
+    story = []
+    story.append(Paragraph(f"MatDiscoverAI: {info['name']} Report", title_style))
+    story.append(Spacer(1, 0.5*cm))
+    story.append(Paragraph(f"<b>Domain:</b> {domain} | <b>Generated:</b> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", body_style))
+    story.append(Spacer(1, 0.5*cm))
+
+    story.append(Paragraph("1. Overview", h2_style))
+    story.append(Paragraph(f"<b>Description:</b> {info['description']}", body_style))
+    story.append(Paragraph(f"<b>Samples:</b> {analysis['n_samples']}", body_style))
+    story.append(Paragraph(f"<b>Columns:</b> {analysis['n_columns']}", body_style))
+    story.append(Paragraph(f"<b>Targets:</b> {len(info['targets'])}", body_style))
+    story.append(Paragraph(f"<b>Quality Score:</b> {quality['score']}/100 ({quality['grade']})", body_style))
+    story.append(Spacer(1, 0.3*cm))
+
+    story.append(Paragraph("2. Statistics", h2_style))
+    stat_data = [["Column", "Mean", "Std", "Min", "Max", "Median"]]
+    for col, s in list(analysis.get("statistics", {}).items())[:15]:
+        stat_data.append([col, f"{s['mean']:.2f}", f"{s['std']:.2f}",
+                          f"{s['min']:.2f}", f"{s['max']:.2f}", f"{s['median']:.2f}"])
+    t = Table(stat_data, repeatRows=1)
+    t.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e3a8a")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+    ]))
+    story.append(t)
+    story.append(Spacer(1, 0.3*cm))
+
+    story.append(Paragraph("3. Trained Models", h2_style))
+    models = [m for m in list_trained_models() if m["domain"] == domain]
+    if models:
+        model_data = [["Target", "Algorithm", "R²", "RMSE", "MAE"]]
+        for m in models[:15]:
+            r2 = m.get("metrics", {}).get("r2", "N/A")
+            rmse = m.get("metrics", {}).get("rmse", "N/A")
+            mae = m.get("metrics", {}).get("mae", "N/A")
+            model_data.append([
+                m["target"], m["algorithm"],
+                f"{r2:.3f}" if isinstance(r2, (int, float)) else str(r2),
+                f"{rmse:.2f}" if isinstance(rmse, (int, float)) else str(rmse),
+                f"{mae:.2f}" if isinstance(mae, (int, float)) else str(mae),
+            ])
+        t2 = Table(model_data, repeatRows=1)
+        t2.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#6f42c1")),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+            ("FONTSIZE", (0, 0), (-1, -1), 8),
+            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+        ]))
+        story.append(t2)
+    else:
+        story.append(Paragraph("No trained models yet for this domain.", body_style))
+
+    story.append(Spacer(1, 0.5*cm))
+    story.append(Paragraph("Report generated by MatDiscoverAI", body_style))
+
+    doc.build(story)
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="{domain}_report.pdf"'
+    return response
+
+
+def export_full_comparison_markdown() -> HttpResponse:
+    """Export a comparison of all 7 domains as Markdown."""
+    comparison = compare_datasets()
+    md = f"""# MatDiscoverAI: All Domains Comparison
+
+**Generated:** {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+
+## Summary
+
+| Domain | Samples | Columns | Targets | Quality Score | Grade | Missing % |
+|--------|---------|---------|---------|---------------|-------|-----------|
+"""
+    for d in comparison:
+        md += f"| {d['name']} | {d['n_samples']} | {d['n_columns']} | {d['n_targets']} | {d['score']}/100 | {d['grade']} | {d['missing_pct']}% |\n"
+
+    md += f"""
+
+## Per-domain details
+
+"""
+    for d in comparison:
+        info = get_domain_info(d["domain"])
+        md += f"### {d['name']} (`{d['domain']}`)\n"
+        md += f"- {info['description']}\n"
+        md += f"- **Targets:** {', '.join(info['targets'])}\n\n"
+
+    md += "\n---\n\n*Report generated by MatDiscoverAI*\n"
+    response = HttpResponse(md, content_type="text/markdown")
+    response["Content-Disposition"] = 'attachment; filename="all_domains_comparison.md"'
+    return response

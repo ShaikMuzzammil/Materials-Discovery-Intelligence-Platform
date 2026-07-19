@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Experiments – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-flask"></i> Experiment Tracking</h3>
+        <p class="text-muted mb-0">MLflow-style tracking of training runs, hyperparameter tuning, and model performance.</p>
+    </div>
+    <a href="{% url 'experiments-leaderboard' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-trophy"></i> Leaderboard
+    </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card p-3">
+            <div class="stat-value">{{ experiments|length }}</div>
+            <div class="stat-label">Experiments</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3" style="border-left-color: var(--mda-accent);">
+            <div class="stat-value" style="color: var(--mda-accent);" id="nRuns">{{ recent_runs|length }}</div>
+            <div class="stat-label">Training runs</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3" style="border-left-color: var(--mda-success);">
+            <div class="stat-value" style="color: var(--mda-success);" id="nCompleted">
+                {{ recent_runs|length }}
+            </div>
+            <div class="stat-label">Completed</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card p-3" style="border-left-color: #f59e0b;">
+            <div class="stat-value" style="color: #f59e0b;" id="nFailed">0</div>
+            <div class="stat-label">Failed</div>
+        </div>
+    </div>
+</div>
+
+<div class="card p-3">
+    <h6 class="fw-bold mb-3">Recent training runs</h6>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th><th>Domain</th><th>Target</th><th>Algorithm</th>
+                    <th>R²</th><th>RMSE</th><th>MAE</th><th>Duration</th><th>Status</th><th>When</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in recent_runs %}
+                    <tr>
+                        <td>{{ r.id }}</td>
+                        <td><span class="badge text-bg-light text-secondary border">{{ r.domain }}</span></td>
+                        <td><code>{{ r.target }}</code></td>
+                        <td>{{ r.algorithm }}</td>
+                        <td>{{ r.metrics.r2|floatformat:3|default:"—" }}</td>
+                        <td>{{ r.metrics.rmse|floatformat:2|default:"—" }}</td>
+                        <td>{{ r.metrics.mae|floatformat:2|default:"—" }}</td>
+                        <td>{{ r.duration_seconds|floatformat:1 }}s</td>
+                        <td>
+                            <span class="badge text-bg-{% if r.status == 'completed' %}success{% elif r.status == 'running' %}info{% else %}danger{% endif %}">{{ r.status }}</span>
+                        </td>
+                        <td class="small">{{ r.created_at|timesince }} ago</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="10" class="text-muted text-center py-4">No runs yet. Train a model first.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

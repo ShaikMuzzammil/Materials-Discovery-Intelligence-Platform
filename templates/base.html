@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ APP_NAME }} – AI Materials Discovery{% endblock %}</title>
+    <meta name="description" content="LLM-powered scientific knowledge extraction & materials discovery framework">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Plotly for visualizations -->
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.14.1/dist/cdn.min.js"></script>
+
+    <link href="{% static 'css/app.css' %}" rel="stylesheet">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{% url 'home' %}">
+            <i class="bi bi-atom"></i> {{ APP_NAME }}
+            <span class="badge text-bg-secondary ms-2 small">v{{ APP_VERSION }}</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navMain">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link {% if section == 'home' %}active{% endif %}" href="{% url 'home' %}"><i class="bi bi-house-door"></i> Home</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {% if section == 'dashboard' or section == 'analytics' or section == 'monitoring' %}active{% endif %}" data-bs-toggle="dropdown"><i class="bi bi-speedometer2"></i> Analytics</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'dashboard-overview' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'analytics-landing' %}"><i class="bi bi-graph-up-arrow"></i> Advanced Analytics</a></li>
+                        <li><a class="dropdown-item" href="{% url 'analytics-insights' %}"><i class="bi bi-stars"></i> Cross-Domain Insights</a></li>
+                        <li><a class="dropdown-item" href="{% url 'monitoring-landing' %}"><i class="bi bi-activity"></i> Monitoring</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link {% if section == 'domains' %}active{% endif %}" href="{% url 'domains-landing' %}"><i class="bi bi-layers-3"></i> Domains</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {% if section == 'papers' or section == 'extraction' or section == 'kg' %}active{% endif %}" data-bs-toggle="dropdown"><i class="bi bi-journal-text"></i> Knowledge</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'paper-list' %}"><i class="bi bi-journal-text"></i> Papers</a></li>
+                        <li><a class="dropdown-item" href="{% url 'extraction-dashboard' %}"><i class="bi bi-diagram-3"></i> Extraction</a></li>
+                        <li><a class="dropdown-item" href="{% url 'kg-dashboard' %}"><i class="bi bi-share"></i> Knowledge Graph</a></li>
+                        <li><a class="dropdown-item" href="{% url 'material-list' %}"><i class="bi bi-layers"></i> Materials</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle {% if section == 'datasets' or section == 'experiments' or section == 'workflow' %}active{% endif %}" data-bs-toggle="dropdown"><i class="bi bi-cpu"></i> ML</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="{% url 'datasets-landing' %}"><i class="bi bi-database"></i> Datasets</a></li>
+                        <li><a class="dropdown-item" href="{% url 'predictions-predict' %}"><i class="bi bi-graph-up-arrow"></i> Predict</a></li>
+                        <li><a class="dropdown-item" href="{% url 'experiments-landing' %}"><i class="bi bi-flask"></i> Experiments</a></li>
+                        <li><a class="dropdown-item" href="{% url 'experiments-leaderboard' %}"><i class="bi bi-trophy"></i> Leaderboard</a></li>
+                        <li><a class="dropdown-item" href="{% url 'workflow-landing' %}"><i class="bi bi-diagram-3"></i> Workflows</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link {% if section == 'exports' %}active{% endif %}" href="{% url 'exports-landing' %}"><i class="bi bi-download"></i> Exports</a></li>
+                <li class="nav-item"><a class="nav-link {% if section == 'chat' %}active{% endif %}" href="{% url 'chat' %}"><i class="bi bi-chat-dots"></i> AI Chat</a></li>
+            </ul>
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ user.display_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#">Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'logout' %}">Sign out</a></li>
+                        </ul>
+                    </li>
+                {% else %}
+                    <li class="nav-item"><a class="btn btn-outline-light btn-sm" href="{% url 'account_login' %}">Sign in</a></li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid py-4">
+    {% if messages %}
+        {% for m in messages %}
+            <div class="alert alert-{{ m.tags|default:'info' }} alert-dismissible fade show">
+                {{ m }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</div>
+
+<footer class="bg-dark text-light py-4 mt-5">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-6">
+                <h6 class="text-uppercase fw-bold"><i class="bi bi-atom"></i> {{ APP_NAME }}</h6>
+                <p class="small text-muted mb-0">
+                    LLM-based scientific knowledge extraction & materials discovery framework.
+                    Built with Django, scikit-learn, transformers, LangChain, ChromaDB.
+                </p>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-uppercase fw-bold small">Stack</h6>
+                <ul class="list-unstyled small text-muted">
+                    <li>Django 5 + DRF</li>
+                    <li>scikit-learn / XGBoost</li>
+                    <li>HuggingFace transformers</li>
+                    <li>LangChain + ChromaDB</li>
+                    <li>NetworkX / Neo4j</li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6 class="text-uppercase fw-bold small">Domain</h6>
+                <p class="small text-muted mb-0">
+                    Focus: {{ DEFAULT_DOMAIN }} materials discovery.<br>
+                    Data sources: arXiv, OpenAlex, CrossRef, Materials Project.
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

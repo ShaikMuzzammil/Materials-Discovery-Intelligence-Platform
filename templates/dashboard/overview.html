@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Dashboard – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-1"><i class="bi bi-speedometer2"></i> Analytics Dashboard</h3>
+        <p class="text-muted mb-0">Real-time overview of the MatDiscoverAI knowledge base.</p>
+    </div>
+    <button class="btn btn-outline-primary btn-sm" onclick="refreshStats()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+    </button>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3">
+            <div class="stat-value" id="stat-papers">{{ total_papers }}</div>
+            <div class="stat-label">Papers</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3" style="border-left-color: var(--mda-accent);">
+            <div class="stat-value" style="color: var(--mda-accent);" id="stat-entities">{{ total_entities }}</div>
+            <div class="stat-label">Entities</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3" style="border-left-color: var(--mda-success);">
+            <div class="stat-value" style="color: var(--mda-success);" id="stat-relations">{{ total_relations }}</div>
+            <div class="stat-label">Relations</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card stat-card p-3" style="border-left-color: #f59e0b;">
+            <div class="stat-value" style="color: #f59e0b;" id="stat-materials">{{ total_materials }}</div>
+            <div class="stat-label">Materials</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold mb-3">Entity type distribution</h6>
+            <div id="chart-entity-types" style="height: 320px;"></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold mb-3">Relation type distribution</h6>
+            <div id="chart-relation-types" style="height: 320px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold mb-3">Papers by source</h6>
+            <div id="chart-papers-source" style="height: 320px;"></div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card p-3 h-100">
+            <h6 class="fw-bold mb-3">Papers by processing status</h6>
+            <div id="chart-papers-status" style="height: 320px;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-12">
+        <div class="card p-3">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold mb-0">Top materials by mention count</h6>
+                <a href="{% url 'kg-dashboard' %}" class="btn btn-sm btn-outline-primary">View graph →</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-sm table-hover">
+                    <thead class="table-light">
+                        <tr><th>#</th><th>Material</th><th>Formula</th><th>Mentions</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for m in top_materials %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td class="fw-semibold">{{ m.name }}</td>
+                                <td><code>{{ m.formula }}</code></td>
+                                <td><span class="badge text-bg-primary">{{ m.paper_count }}</span></td>
+                            </tr>
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">
+                                No materials yet. Run <code>python manage.py build_kg</code> first.
+                            </td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function refreshStats() {
+    const data = await fetchJSON('/api/dashboard/stats/');
+    document.getElementById('stat-papers').textContent = data.papers;
+    document.getElementById('stat-entities').textContent = data.entities;
+    document.getElementById('stat-relations').textContent = data.relations;
+    document.getElementById('stat-materials').textContent = data.materials;
+
+    // Entity types bar chart
+    Plotly.newPlot('chart-entity-types', [{
+        type: 'bar',
+        x: data.entity_types.map(e => e.entity_type),
+        y: data.entity_types.map(e => e.count),
+        marker: { color: '#0d6efd' },
+    }], { ...PLOTLY_LAYOUT, xaxis: { tickangle: -30 } }, PLOTLY_CONFIG);
+
+    // Relation types pie chart
+    Plotly.newPlot('chart-relation-types', [{
+        type: 'pie',
+        labels: data.relation_types.map(r => r.relation_type),
+        values: data.relation_types.map(r => r.count),
+        hole: 0.4,
+    }], PLOTLY_LAYOUT, PLOTLY_CONFIG);
+
+    // Papers by source
+    Plotly.newPlot('chart-papers-source', [{
+        type: 'bar',
+        x: data.papers_by_source.map(p => p.source),
+        y: data.papers_by_source.map(p => p.count),
+        marker: { color: '#6f42c1' },
+    }], PLOTLY_LAYOUT, PLOTLY_CONFIG);
+
+    // Papers by status
+    Plotly.newPlot('chart-papers-status', [{
+        type: 'bar',
+        x: data.papers_by_status.map(p => p.status),
+        y: data.papers_by_status.map(p => p.count),
+        marker: { color: '#198754' },
+    }], PLOTLY_LAYOUT, PLOTLY_CONFIG);
+}
+
+refreshStats();
+</script>
+{% endblock %}

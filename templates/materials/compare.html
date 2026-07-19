@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Compare Materials – {{ APP_NAME }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h3 class="fw-bold"><i class="bi bi-bar-chart"></i> Compare Materials</h3>
+    <p class="text-muted">Side-by-side comparison of cached / fetched materials.</p>
+</div>
+
+<form method="get" class="card p-3 mb-4">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-8">
+            <label class="form-label small">Formulas (comma-separated)</label>
+            <input type="text" class="form-control" name="formulas" value="{{ formulas|join:',' }}" placeholder="LiFePO4,LiCoO2,LiMn2O4">
+        </div>
+        <div class="col-md-4">
+            <button class="btn btn-primary w-100"><i class="bi bi-arrow-repeat"></i> Compare</button>
+        </div>
+    </div>
+</form>
+
+{% if comparison %}
+    <div class="card p-3 mb-4">
+        <h6 class="fw-bold mb-3">Comparison table</h6>
+        <div class="table-responsive">
+            <table class="table table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Property</th>
+                        {% for c in comparison %}
+                            <th>{{ c.formula }}{% if c.mp_id %}<br><code class="small">{{ c.mp_id }}</code>{% endif %}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><th>Band gap (eV)</th>{% for c in comparison %}<td>{{ c.band_gap|default:"—" }}</td>{% endfor %}</tr>
+                    <tr><th>Density (g/cm³)</th>{% for c in comparison %}<td>{{ c.density|default:"—" }}</td>{% endfor %}</tr>
+                    <tr><th>Formation energy (eV/atom)</th>{% for c in comparison %}<td>{{ c.formation_energy|default:"—" }}</td>{% endfor %}</tr>
+                    <tr><th>Theoretical capacity (mAh/g)</th>{% for c in comparison %}<td>{{ c.theoretical_capacity|default:"—" }}</td>{% endfor %}</tr>
+                    <tr><th>Average voltage (V)</th>{% for c in comparison %}<td>{{ c.average_voltage|default:"—" }}</td>{% endfor %}</tr>
+                    <tr><th>Energy density (Wh/kg)</th>{% for c in comparison %}<td>{{ c.energy_density|default:"—" }}</td>{% endfor %}</tr>
+                    <tr><th>Stable</th>{% for c in comparison %}<td>{{ c.is_stable|yesno:"yes,no" }}</td>{% endfor %}</tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card p-3">
+        <h6 class="fw-bold mb-3">Visual comparison</h6>
+        <div id="compareChart" style="height: 450px;"></div>
+    </div>
+{% else %}
+    <div class="card p-5 text-center text-muted">
+        <i class="bi bi-bar-chart display-1"></i>
+        <p class="mt-3">Enter formulas above to compare.</p>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const comparison = {{ comparison|safe|default:"[]" }};
+// Need to serialize – Django auto-escapes; let's re-fetch via API for the chart
+async function drawCompareChart() {
+    const formulas = "{{ formulas|join:',' }}";
+    if (!formulas) return;
+    try {
+        const data = await fetchJSON(`/api/materials/api/compare/?formulas=${encodeURIComponent(formulas)}`);
+        if (!data.length) return;
+        const traces = ['theoretical_capacity', 'average_voltage', 'energy_density', 'band_gap', 'density'].map(metric => ({
+            type: 'bar',
+            name: metric,
+            x: data.map(d => d.formula),
+            y: data.map(d => d[metric] || 0),
+        }));
+        Plotly.newPlot('compareChart', traces, {
+            ...PLOTLY_LAYOUT,
+            barmode: 'group',
+            legend: { orientation: 'h', y: -0.2 },
+        }, PLOTLY_CONFIG);
+    } catch (e) { console.error(e); }
+}
+drawCompareChart();
+</script>
+{% endblock %}
