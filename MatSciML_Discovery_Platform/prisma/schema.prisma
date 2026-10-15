@@ -1,0 +1,92 @@
+// Prisma schema — OPTIONAL local persistence for the MatSciML Discovery
+// Platform (capstone 24041_103).
+//
+// The site is fully functional WITHOUT this database: every API route falls
+// back to the verified constants in src/lib/data.ts. Seeding locally
+// (bun run db:push && bun run db:seed) makes the API prefer Prisma/SQLite.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Paper {
+  id        Int     @id
+  shortName String
+  title     String
+  year      Int
+  venue     String
+  doi       String
+  role      String
+  isBase    Boolean @default(false)
+}
+
+model StructuredRecord {
+  id                 Int     @id
+  material           String
+  property           String
+  value              Float
+  unit               String
+  conditions         String  @default("")
+  sourcePaper        String
+  page               Int
+  sentence           String
+  matchedInBenchmark Boolean @default(false)
+}
+
+model DiscoveryCandidate {
+  rank               Int    @id
+  candidate          String
+  structureFamily    String
+  predictedBandGapEv Float
+}
+
+model ModelResult {
+  id        Int     @id
+  model     String
+  maeMean   Float
+  maeStd    Float
+  rmseMean  Float
+  rmseStd   Float
+  r2Mean    Float
+  r2Std     Float
+  isBest    Boolean @default(false)
+}
+
+model FeatureImportance {
+  id         Int    @id @default(autoincrement())
+  rank       Int
+  feature    String
+  importance Float
+
+  @@unique([rank])
+}
+
+/// Completed Live Pipeline Lab runs (browser engine artifacts).
+model RunArtifact {
+  id        Int      @id @default(autoincrement())
+  runId     String   @unique
+  createdAt DateTime @default(now())
+  config    Json
+  summary   Json
+  records   Json
+  cvResults Json
+  discovery Json
+}
+
+/// Papers uploaded through the platform (real pdf.js extraction).
+/// Persisted server-side when a database is configured; the browser
+/// IndexedDB library is the zero-config fallback on Vercel.
+model UploadedPaper {
+  id        Int      @id @default(autoincrement())
+  filename  String   @unique
+  title     String   @default("")
+  pagesJson Json
+  pages     Int
+  chars     Int
+  createdAt DateTime @default(now())
+}
